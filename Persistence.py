@@ -44,9 +44,9 @@ def getClient(*client):
     raise NotImplementedError(f"Unsupported type: {type(client)}")
 
 @getClient.register
-def _(client: int):
+def _(nroCliente: int):
     try:
-        query = {"nroCliente": client}
+        query = {"nroCliente": nroCliente}
         #aca chequeamos si el dato esta cacheado
         #return cached
 
