@@ -11,30 +11,11 @@ mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = mongoClient["mydatabase"]    #Mongo only creates a db when it gets content
 r = redis.Redis()
 
-#============ Inserting Data ===========>
-#r.mset({"Croatia": "Zagreb", "Bahamas":"Nassau", "Argentina":"Chuwut"})
-#print(r.get("Argentina").decode("utf-8"))
-
-#mydb = mongoClient["mydatabase"]
-#mycol = mydb["customers"]
-#print(mongoClient)
-#print(mydb)
-#print(mycol)
-
 #============ Clients ===========>
 clients = mongoClient["DB2TPE"]["clients"]
 
-def insertClient(nroCliente, nombre, apellido, direccion, activo, codigoArea=None, nroTel=None, tipoTel=None):
+def insertClient(client):
     try:
-        client = {"nroCliente": nroCliente,
-                "nombre": nombre,
-                "apellido": apellido,
-                "direccion": direccion,
-                "activo": activo}
-        if codigoArea and nroTel and tipoTel:
-            client["telefono"] = {"codigoArea": codigoArea,
-                                "nroTel": nroTel,
-                                "tipoTel": tipoTel}
         newClient = clients.insert_one(client)
         return newClient
     except Exception as e:
@@ -74,15 +55,14 @@ def _(nombre: str, apellido: str):
         return None
 
 
-#============ Main ===========>
-def main():
-
+def populateDb():
     clientes = {}
+
     with open('./resources/e01_cliente.csv', mode="r", encoding='ISO-8859-1') as clientsFile:
         clientsReader = csv.reader(clientsFile, delimiter=';')
         ClientHeaders = next(clientsReader)   #skip headers
+
         for row in clientsReader:
-            print(row)
             nroCliente = row[0]
             nombre = row[1]
             apellido = row[2]
@@ -95,44 +75,30 @@ def main():
                 "direccion": direccion,
                 "activo": activo
             }
+        
     with open('./resources/e01_telefono.csv', mode="r",encoding='ISO-8859-1') as phonesFile:
         phonesReader = csv.reader(phonesFile, delimiter=';')
         phoneHeaders = next(phonesReader)
-        for row in phonesReader:
-            codigoArea = row[0]
-            nroTel = row[1]
-            tipoTel = row[2]
-            nroCliente = row[3]
-            clientes[nroCliente]["telefono"] = {
-                "codigoArea": codigoArea,
-                "nroTel": nroTel,
-                "tipoTel": tipoTel
-            }
-    for cliente in clientes:
-        print(clientes[cliente])
-        tempTelefono = clientes[cliente].get("telefono")
-        if tempTelefono:
-            insertClient(cliente, 
-                clientes[cliente]["nombre"], 
-                clientes[cliente]["apellido"],
-                clientes[cliente]["direccion"],
-                clientes[cliente]["activo"],
-                tempTelefono["codigoArea"],
-                tempTelefono["nroTel"],
-                tempTelefono["tipoTel"])
-        else:
-            insertClient(cliente, 
-                clientes[cliente]["nombre"], 
-                clientes[cliente]["apellido"],
-                clientes[cliente]["direccion"],
-                clientes[cliente]["activo"])
 
-    for i in range(1, 100):
-        tempClient = getClient(i)
-        print(tempClient.get("nombre"))
-        if tempClient.get("telefono"):
-            print(tempClient.get("telefono").get("nroTel"))
+        if clientes[nroCliente] is None:        #if a client doesn't have personal data asociated, we insert only phone data
+            clientes[nroCliente] = {}
             
-main()
+
+        for row in phonesReader:
+
+            nroCliente = row[3]
+            if "telefonos" not in clientes[nroCliente]:     #if the key does not exist, create it
+                clientes[nroCliente]["telefonos"] = []
+
+            clientes[nroCliente]["telefonos"].append({
+                "codigoArea": row[0],   
+                "nroTel": row[1],
+                "tipoTel": row[2]
+            })
+
+    for cliente in clientes:
+        insertClient(clientes[cliente])
+            
+
 
 
