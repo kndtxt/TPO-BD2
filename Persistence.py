@@ -3,6 +3,7 @@
 import redis
 import pymongo
 from functools import singledispatch        #provides method overloading among other things
+import csv
 
 #============ Dbs Connection ===========>
 
@@ -22,16 +23,19 @@ r = redis.Redis()
 
 #============ Clients ===========>
 clients = mongoClient["DB2TPE"]["clients"]
-def insertClient(nroCliente, nombre, apellido, direccion, activo, codigoArea, nroTel, tipoTel):
+
+def insertClient(nroCliente, nombre, apellido, direccion, activo, codigoArea=None, nroTel=None, tipoTel=None):
     try:
-        newClient = clients.insert_one({"nroCliente": nroCliente,
-                            "nombre": nombre,
-                            "apellido": apellido,
-                            "direccion": direccion,
-                            "activo": activo,
-                            "telefono": {"codigoArea": codigoArea,
-                                        "nroTel": nroTel,
-                                        "tipoTel": tipoTel}})
+        client = {"nroCliente": nroCliente,
+                "nombre": nombre,
+                "apellido": apellido,
+                "direccion": direccion,
+                "activo": activo}
+        if codigoArea and nroTel and tipoTel:
+            client["telefono"] = {"codigoArea": codigoArea,
+                                "nroTel": nroTel,
+                                "tipoTel": tipoTel}
+        newClient = clients.insert_one(client)
         return newClient
     except Exception as e:
         print(e)
@@ -72,11 +76,63 @@ def _(nombre: str, apellido: str):
 
 #============ Main ===========>
 def main():
-    insertClient(1, "John", "Doe", "Calle Falsa 123", True, 11, 12345678, "Celular")
-    insertClient(2, "Jane", "Doe", "Calle Falsa 123", True, 11, 12345678, "Celular")
-    print(getClient("Jane", "Doe"))
-    print(getClient(1))
 
+    clientes = {}
+    with open('./resources/e01_cliente.csv', mode="r", encoding='ISO-8859-1') as clientsFile:
+        clientsReader = csv.reader(clientsFile, delimiter=';')
+        ClientHeaders = next(clientsReader)   #skip headers
+        for row in clientsReader:
+            print(row)
+            nroCliente = row[0]
+            nombre = row[1]
+            apellido = row[2]
+            direccion = row[3]
+            activo = row[4]
+            clientes[nroCliente] = {
+                "nroCliente": nroCliente,
+                "nombre": nombre,
+                "apellido": apellido,
+                "direccion": direccion,
+                "activo": activo
+            }
+    with open('./resources/e01_telefono.csv', mode="r",encoding='ISO-8859-1') as phonesFile:
+        phonesReader = csv.reader(phonesFile, delimiter=';')
+        phoneHeaders = next(phonesReader)
+        for row in phonesReader:
+            codigoArea = row[0]
+            nroTel = row[1]
+            tipoTel = row[2]
+            nroCliente = row[3]
+            clientes[nroCliente]["telefono"] = {
+                "codigoArea": codigoArea,
+                "nroTel": nroTel,
+                "tipoTel": tipoTel
+            }
+    for cliente in clientes:
+        print(clientes[cliente])
+        tempTelefono = clientes[cliente].get("telefono")
+        if tempTelefono:
+            insertClient(cliente, 
+                clientes[cliente]["nombre"], 
+                clientes[cliente]["apellido"],
+                clientes[cliente]["direccion"],
+                clientes[cliente]["activo"],
+                tempTelefono["codigoArea"],
+                tempTelefono["nroTel"],
+                tempTelefono["tipoTel"])
+        else:
+            insertClient(cliente, 
+                clientes[cliente]["nombre"], 
+                clientes[cliente]["apellido"],
+                clientes[cliente]["direccion"],
+                clientes[cliente]["activo"])
+
+    for i in range(1, 100):
+        tempClient = getClient(i)
+        print(tempClient.get("nombre"))
+        if tempClient.get("telefono"):
+            print(tempClient.get("telefono").get("nroTel"))
+            
 main()
 
 
