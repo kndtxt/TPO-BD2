@@ -58,7 +58,7 @@ def _(nroCliente: int):
         if cached_client:
             return cached_client
 
-        query = {"nroCliente": nroCliente}
+        query = {"clientNbr": nroCliente}
         client = CLIENTS.find_one(query)
 
         if client:#caching
@@ -158,6 +158,26 @@ def getAllClients():
     
 #============ Modify ===========>
 
+def modifyClient(client):
+    """
+    Modifies a persisted client.
+    Args:
+        fiter(object): the filter that matches with clients to modify.
+    Returns:
+        true if modified. false otherwise
+    """
+    try:
+        filter = {"clientNbr": client['clientNbr']}
+        operation = {"$set": client}
+        result = CLIENTS.update_one(filter, operation)
+        if result.modified_count <=0: raise Exception("No clients modified")
+        
+        #TODO invalidate redis_cache here!!!!!!!!!!!!
+        return True
+
+    except Exception as e:
+        print(f"Error finding all clients: {e}")
+        return None
 
 #============ Delete ===========>
 def deleteClient(nroCliente: int):

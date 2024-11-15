@@ -59,6 +59,27 @@ def getProduct(codProd: int):
             
 
 #============ Modify ===========>
+def modifyProduct(product):
+    """
+    Modifies a persisted product.
+    Args:
+        product(Product): the product to be modified
+    Returns:
+        True if modified. False otherwise
+    """
+    try:
+        filter = {"codProduct": product['codProduct']}
+        operation = {"$set": product}
+        result = PRODUCTS.update_one(filter, operation)
+        if result.modified_count <=0: 
+            raise Exception("No products modified")
+            return False
+        
+        #TODO modify cache here!!!!!!!!!!!
+        return True
+    except Exception as e:
+        print(f"Error modifying product: {e}")
+        return False
 
 
 #============ Delete ===========>
