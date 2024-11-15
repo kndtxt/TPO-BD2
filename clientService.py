@@ -2,8 +2,8 @@
 from persistence import mydb, mongoClient, CLIENTS
 from productService import getProduct
 import cache as c
-from models import Cliente
-from pydantic import ValidationError
+#from models import Cliente
+#from pydantic import ValidationError
 from functools import singledispatch
 
 #============ Setters ==================>
@@ -18,24 +18,19 @@ def insertClient(client):
         client if created. None otherwise.
     """ 
     try:
-        redis_key = f"clients:{client['nombre']}:{client['apellido']}"#forced delete id cached in redis
+        redis_key = f"clients:{client['name']}:{client['lastName']}"#forced delete id cached in redis
         cached_clients = c.cache_get(redis_key)
         if cached_clients:
             c.cache_del(redis_key)
         
-        nroCliente = int(client['nroCliente']) if isinstance(client['nroCliente'], str) else client['nroCliente']
-        query = {"nroCliente": nroCliente}
+        nroCliente = int(client['clientNbr']) if isinstance(client['clientNbr'], str) else client['clientNbr']
+        query = {"clientNbr": nroCliente}
         aux_client = CLIENTS.find_one(query)
         if aux_client is not None:
             print(f"Client for nroCliente: {nroCliente} already exists!")
             return None
 
-        aux_client = Cliente(**client)#validate by model
-        newClient = CLIENTS.insert_one(aux_client.dict())
-        return newClient
-
-    except ValidationError as e:
-        print(f"Data validation error: {e}")
+        return CLIENTS.insert_one(client)
     except Exception as e:
         print(e)
         return None

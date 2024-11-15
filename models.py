@@ -1,4 +1,4 @@
-#============ Imports ==================>
+'''#============ Imports ==================>
 from pydantic import BaseModel, validator, root_validator
 from typing import List
 from datetime import date
@@ -165,4 +165,4 @@ class Cliente(BaseModel):
     class Config:
         # We can specify this to handle MongoDB's ObjectId properly if needed
         use_enum_values = True
-        orm_mode = True
+        orm_mode = True'''

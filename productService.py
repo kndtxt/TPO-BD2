@@ -1,8 +1,8 @@
 #============ Imports ==================>
 from persistence import mydb, PRODUCTS
 import cache as c
-from models import Producto
-from pydantic import ValidationError
+#from models import Producto
+#from pydantic import ValidationError
 from functools import singledispatch
 
 #============ Setters ==================>
@@ -17,19 +17,13 @@ def insertProduct(product):
         product if created. None otherwise.
     """ 
     try:
-        oldCodProduct = product['codProduct']
-        codProduct = int(oldCodProduct) if isinstance(oldCodProduct, str) else oldCodProduct
-        query = {"codProduct": codProduct}
+        query = {"codProduct": product['codProduct']}
         aux_prod = PRODUCTS.find_one(query)
         if aux_prod is not None:
-            print(f"Product for codProduct: {codProduct} already exists!")
+            print(f"Product for codProduct: {product['codProduct']} already exists!")
             return None
 
-        aux_prod = Producto(**product)#validate by model
-        newProduct = PRODUCTS.insert_one(aux_prod.dict())
-        return newProduct
-    except ValidationError as e:
-        print(f"Data validation error: {e}")
+        return PRODUCTS.insert_one(product)
     except Exception as e:
         print(e)
         return None
