@@ -2,8 +2,8 @@
 from persistence import mydb, mongoClient, CLIENTS
 from productService import getProduct
 import cache as c
-#from models import Cliente
-#from pydantic import ValidationError
+from models import Client
+from pydantic import ValidationError
 from functools import singledispatch
 from pymongo.errors import DuplicateKeyError
 
@@ -31,7 +31,15 @@ def insertClient(client):
             print(f"Client for nroCliente: {nroCliente} already exists!")
             return None
 
-        return CLIENTS.insert_one(client)
+        aux_client = Client(**client)#validate by model
+        newClient = CLIENTS.insert_one(aux_client.dict())
+        return newClient
+
+    except ValidationError as e:
+        print(f"Data validation error: {e}")
+    except DuplicateKeyError as e:
+        print(f"Client for nroCliente: {client['clientNbr']} already exists!")
+        return None
     except Exception as e:
         print(e)
         return None
@@ -100,6 +108,9 @@ def _(name: str, lastName: str):
         print(f"Error finding client: {e}")
         return None
     
+def getClientSpent(clientNbr: int):
+    return None#TODO doit
+
 def getAllClients():
     """
     Searches for all the clients in database.
@@ -126,6 +137,15 @@ def getAllClients():
     except Exception as e:
         print(f"Error finding all clients: {e}")
         return None
+
+def getAllClientsBillAmount():
+    return None#TODO doit
+
+def getClientsWithBills():
+    return None#TODO doit
+
+def getClientsWithNoBills():
+    return None#TODO doit
 
 def getAllPhones():
     """
@@ -167,7 +187,7 @@ def getAllPhones():
         clients_list = list(clients_with_phones)
 
         if clients_list:  #caching#TODO capaz si se podria cachear solo la query getall, pero habria que chequear en toda fncion que modifique toda la db
-            redis_key = f"clients:all"#TODO magic query string!
+            redis_key = f"phones:all"#TODO magic query string!
             c.cache_set(redis_key, clients_list)
         
         return clients_list
@@ -213,7 +233,11 @@ def deleteClient(clientNbr: int):
 
         CLIENTS.delete_one(query)#TODO habria q borrar las bills relacionadass tmb?
         #TODO ver tema cache que querys corresponde borrar de redis aca, por ahora solo se que esta si
-        redis_key = f"cliente:{clientNbr}"
+        redis_key = f"clients:all"
+        c.cache_delete(redis_key)
+        redis_key = f"client:{clientNbr}"
+        c.cache_delete(redis_key)
+        redis_key = f"clients:{client['name']}:{client['lastName']}"
         c.cache_delete(redis_key)
 
         return True

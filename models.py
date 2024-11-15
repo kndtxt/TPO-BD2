@@ -4,161 +4,162 @@ from typing import List
 from datetime import date
 
 #============ Models ==================>
-class Producto(BaseModel):
+class Product(BaseModel):
     codProduct: int
-    marca: str
-    nombre: str
-    descripcion: str
-    precio: float
+    brand: str
+    name: str
+    description: str
+    price: float
     stock: int
-    facturas: List[int]#numeros de facturas
+    billNbrs: List[int]#numeros de facturas
 
     @validator('codProduct')
-    def validate_codigo_producto(cls, v):
+    def validate_codProduct(cls, v):
         if v < 0:
-            raise ValueError('El código del producto debe ser mayor que cero')
+            raise ValueError('codProduct must be higher than 0')
         return v
 
-    @validator('nombre', 'marca', 'descripcion')
-    def validate_nombre_apellido(cls, v):
+    @validator('name', 'brand', 'description')
+    def validate_strings(cls, v):
         if len(v) > 45:
-            raise ValueError('El nombre, marca y descripcion deben ser de hasta 45 caracteres')
+            raise ValueError('name, marca y description must be shorter than 45 chars')
         return v
 
-    @validator('precio')
-    def validate_precio(cls, v):
-        if v < 0:
-            raise ValueError('El precio debe ser mayor que cero')
+    @validator('price')
+    def validate_price(cls, v):
+        if v <= 0:
+            raise ValueError('price must be positive')
         return v
 
     @validator('stock')
     def validate_stock(cls, v):
-        if v < 0:
-            raise ValueError('El stock no puede ser negativo')
-        return v
-    
-
-class DetalleFactura(BaseModel):
-    nroItem: int
-    codProducto: int
-    cantidad: float
-
-    @validator('nroItem')
-    def validate_numero_item(cls, v):
         if v <= 0:
-            raise ValueError('El número de item debe ser mayor que cero')
+            raise ValueError('stock must be positive')
         return v
     
-    @validator('codProducto')
-    def validate_codProducto(cls, v):
-        if v < 0:
-            raise ValueError('El código del producto debe ser mayor que cero')
-        return v
 
-    @validator('cantidad')
-    def validate_cantidad(cls, v):
-        if v < 0:
-            raise ValueError('La cantidad debe ser mayor que cero')
-        return v
+class BillDetail(BaseModel):
+    itemNbr: int
+    codProduct: int
+    amount: float
 
-class Factura(BaseModel):
-    nroFactura: int
-    fecha: date
-    totalSinIva: float
-    iva: float
-    totalConIva: float
-    detalles: List[DetalleFactura]
-    nroCliente: int
-
-    @validator('nroFactura')
-    def validate_numero_factura(cls, v):
-        if v < 0:
-            raise ValueError('El número de factura debe ser mayor que cero')
+    @validator('itemNbr')
+    def validate_itemNbr(cls, v):
+        if v <= 0:
+            raise ValueError('itemNbr must be higher than 0')
         return v
     
-    @validator('nroCliente')
-    def validate_numero_cliente(cls, v):
+    @validator('codProduct')
+    def validate_codProduct(cls, v):
         if v < 0:
-            raise ValueError('El número de cliente debe ser mayor que cero')
-        return v
-    
-    @validator('totalSinIva', 'iva', 'totalConIva')
-    def validate_precio(cls, v):
-        if v < 0:
-            raise ValueError('El total e iva deben ser mayor que cero')
+            raise ValueError('codProduct must be higher than 0')
         return v
 
-    @validator('fecha')
-    def validate_fecha(cls, v):
+    @validator('amount')
+    def validate_amount(cls, v):
+        if v <= 0:
+            raise ValueError('amount must be positive')
+        return v
+
+class Bill(BaseModel):
+    billNbr: int
+    date: date
+    total: float
+    tax: float
+    taxxedTotal: float
+    details: List[BillDetail]
+    clientNbr: int
+
+    @validator('billNbr')
+    def validate_billNbr(cls, v):
+        if v < 0:
+            raise ValueError('billNbr must be higher than 0')
+        return v
+    
+    @validator('clientNbr')
+    def validate_clientNbr(cls, v):
+        if v < 0:
+            raise ValueError('clientNbr must be higher than 0')
+        return v
+    
+    @validator('total', 'tax', 'taxxedTotal')
+    def validate_total(cls, v):
+        if v <= 0:
+            raise ValueError('total must be positive')
+        return v
+
+    @validator('date')
+    def validate_date(cls, v):
         # Validar que la fecha no sea futura
         if v > date.today():
-            raise ValueError('La fecha no puede ser futura')
+            raise ValueError('date cant be in the future')
         return v
     
     @root_validator
-    def validate_detalles(cls, values):
-        detalles = values.get('detalles', [])
-        for detalle in detalles:
-            if not isinstance(detalle, DetalleFactura):
-                raise ValueError('Cada detalle debe ser una instancia válida de DetalleFactura')
+    def validate_details(cls, values):
+        details = values.get('details', [])
+        for detail in details:
+            if not isinstance(detail, BillDetail):
+                raise ValueError('details must be BillDetail instances')
         
         return values
 
-class Telefono(BaseModel):
-    codigoArea: int
-    nroTel: int
-    tipoTel: str
+class Phone(BaseModel):
+    areaCode: int
+    phoneNbr: int
+    phoneType: str
 
-    @validator('codigoArea')
-    def validate_codigoArea(cls, v):
+    @validator('areaCode')
+    def validate_areaCode(cls, v):
         if v > 1000:
-            raise ValueError('El código de área debe ser de hasta 3 digitos')
+            raise ValueError('areaCode must have less than 3 digits')
         return v
 
-    @validator('nroTel')
-    def validate_nroTel(cls, v):
+    @validator('phoneNbr')
+    def validate_phoneNbr(cls, v):
         if v > 10000000:
-            raise ValueError('El teléfono debe ser de hasta 7 digitos')
+            raise ValueError('phoneNbr must have less than 7 digits')
         return v
 
-    @validator('tipoTel')
-    def validate_tipo(cls, v):
+    @validator('phoneType')
+    def validate_phoneType(cls, v):
         if len(v) > 1:
-            raise ValueError('El tipo debe ser de hasta 1 caracter')
+            raise ValueError('phoneType should have only 1 char')
         return v
 
-class Cliente(BaseModel):
-    nroCliente: int
-    nombre: str
-    apellido: str
-    direccion: str
-    activo: int
-    telefonos: List[Telefono]
+class Client(BaseModel):
+    clientNbr: int
+    name: str
+    lastName: str
+    address: str
+    active: int
+    phones: List[Phone]
+    billNbrs: List[int]
 
-    @validator('nroCliente')
-    def validate_nro_cliente(cls, v):
+    @validator('clientNbr')
+    def validate_clientNbr(cls, v):
         if v <= 0:
-            raise ValueError('El número de cliente debe ser mayor que cero')
+            raise ValueError('clientNbr must be higher than 0')
         return v
 
-    @validator('activo')
-    def validate_activo(cls, v):
+    @validator('active')
+    def validate_active(cls, v):
         if v <= 0:
-            raise ValueError('El activo ser mayor que cero')
+            raise ValueError('active must be higher than 0')
         return v
 
-    @validator('nombre', 'apellido', 'direccion')
-    def validate_nombre_apellido(cls, v):
+    @validator('name', 'lastName', 'address')
+    def validate_strings(cls, v):
         if len(v) > 45:
-            raise ValueError('El nombre y apellido deben ser de hasta 45 caracteres')
+            raise ValueError('name, lastName and address must have less than 45 chars')
         return v
     
     @root_validator
-    def validate_telefonos(cls, values):
-        telefonos = values.get('telefonos', [])
-        for telefono in telefonos:
-            if not isinstance(telefono, Telefono):
-                raise ValueError('Cada teléfono debe ser una instancia válida de Telefono')
+    def validate_phones(cls, values):
+        phones = values.get('phones', [])
+        for phone in phones:
+            if not isinstance(phone, Phone):
+                raise ValueError('All phones should be instance of Phone')
         
         return values
 
