@@ -66,5 +66,3 @@ def getProduct(codProd: int):
 
 #============ Modify ===========>
 
-
-#============ Delete ===========>
