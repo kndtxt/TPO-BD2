@@ -2,7 +2,7 @@
 from persistence import mydb, mongoClient, CLIENTS
 from productService import getProduct
 import cache as c
-from models import Client
+import models
 from pydantic import ValidationError
 from functools import singledispatch
 from pymongo.errors import DuplicateKeyError
