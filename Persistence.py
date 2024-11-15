@@ -57,6 +57,11 @@ clients = mongoClient["DB2TPE"]["clients"]
 
 def insertClient(client):
     try:
+        redis_key = f"clientes:{client['nombre']}:{client['apellido']}"#forzamos borrado en redis si estaba cacheado
+        cached_clients = cache_get(redis_key)
+        if cached_clients:
+            r.delete(redis_key)
+
         newClient = clients.insert_one(client)
         return newClient
     except ValidationError as e:
@@ -77,7 +82,7 @@ def _(nroCliente: int):
         redis_key = f"cliente:{nroCliente}"
         cached_client = cache_get(redis_key)
         if cached_client:
-            return cached_client 
+            return cached_client
 
         query = {"nroCliente": nroCliente}
         client = clients.find_one(query)
@@ -97,13 +102,17 @@ def _(nombre: str, apellido: str):
         redis_key = f"clientes:{nombre}:{apellido}"
         cached_clients = cache_get(redis_key)
         if cached_clients:
-            return cached_clients 
+            return cached_clients
+        
+        print("here!")
 
         query = {"nombre": nombre, "apellido": apellido}
         clients_list = list(clients.find(query))
 
         if clients_list:#cacheamos
             cache_set(redis_key, clients_list)
+            print("cacheado")
+
         return clients_list
     except Exception as e:
         print(f"Error finding client: {e}")
