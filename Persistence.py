@@ -12,7 +12,7 @@ import csv
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = mongoClient["mydatabase"]    #Mongo only creates a db when it gets content
 
-#============ Clients ===========>
+#============ Inserts ===========>
 clients = mongoClient["DB2TPE"]["clients"]
 clients.create_index([('nroCliente', 1)], unique=True)
 
@@ -40,6 +40,31 @@ def insertClient(client):
     except Exception as e:
         print(e)
         return None
+
+
+def insertProduct(product):
+    try:
+        products = mongoClient["DB2TPE"]["products"]
+        newProduct = products.insert_one(product)
+        return newProduct
+    except ValidationError as e:
+        print(f"Data validation error: {e}")
+    except Exception as e:
+        print(e)
+        return None
+    
+def insertBill(bill):
+    try:
+        bills = mongoClient["DB2TPE"]["bills"]
+        newBill = bills.insert_one(bill)
+        return newBill
+    except ValidationError as e:
+        print(f"Data validation error: {e}")
+    except Exception as e:
+        print(e)
+
+
+#============ Getters ===========>
 
 @singledispatch
 def getClient(*client):
@@ -86,6 +111,8 @@ def _(nombre: str, apellido: str):
 
 
 def populateDb():
+
+#==== CLient Data ====>
     clientes = {}
 
     with open('./resources/e01_cliente.csv', mode="r", encoding='ISO-8859-1') as clientsFile:
@@ -123,8 +150,66 @@ def populateDb():
                 "tipoTel": row[2]
             })
 
-    for cliente in clientes:
-        insertClient(clientes[cliente])
+        for cliente in clientes:
+            insertClient(clientes[cliente])
+
+
+    #==== Product Data ====>
+
+    products = {}
+    with open('./resources/e01_producto.csv', mode="r",encoding='ISO-8859-1') as productFile:
+        productReader = csv.reader(productFile, delimiter=';')
+        productHeader = next(productReader)
+
+        for row in productReader:
+            codProducto = row[0]
+            products[codProducto] = {
+                "codProducto": codProducto,
+                "marca": row[1],
+                "nombre" : row[2],
+                "descripcion" : row[3],
+                "precio" : row[4],
+                "stock" : row[5],
+                "idsFacturas" : []      #when a bill is inserted, id is added to the list
+            }
+        for product in products:
+            insertProduct(products[product])
+        
+    #==== Factura Data ====>
+    bills = {}
+    with open('./resources/e01_factura.csv', mode="r",encoding='ISO-8859-1') as billFile:
+        billReader = csv.reader(billFile, delimiter=';')
+        billHeader = next(billReader)
+
+        for row in billReader:
+            nroFactura = row[0]
+            nroCliente = row[5]
+            bills[nroFactura] = {
+                "nroFactura": nroFactura,
+                "fecha": row[1],
+                "totalSinIva": row[2],
+                "iva": row[3],
+                "totalConIva": row[4],
+                "nroCliente": nroCliente,
+                "detalles": []
+            }
+
+        with open('./resources/e01_detalle_factura.csv', mode="r",encoding='ISO-8859-1') as billDetailFile:
+            billDetailReader = csv.reader(billDetailFile, delimiter=';')
+            billDetailHeader = next(billDetailReader)
+
+            for row in billDetailReader:
+                nroFactura = row[0]
+                bills[nroFactura]["detalles"].append({
+                    "nroFactura": nroFactura,
+                    "codProducto": codProducto,
+                    "nroItem": row[2],
+                    "cantidad": row[3],
+                })
+    
+    for bill in bills:
+        insertBill(bills[bill])
+
             
 
 
