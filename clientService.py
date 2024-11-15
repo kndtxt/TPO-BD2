@@ -128,7 +128,7 @@ def getAllClients():
         print(f"Error finding all clients: {e}")
         return None
 
-'''def getAllPhones():
+def getAllPhones():
     """
     Searches for all the phones in database.
     Caches query afterwards.
@@ -142,12 +142,30 @@ def getAllClients():
         if cached_clients:
             return cached_clients
         
-        clients = CLIENTS.find({telefonos: {"$ne": []}})
-        CLIENTS.aggregate({$match:})
+        pipeline = [
+            {
+                "$match": {
+                    "phones": {"$ne": []}
+                }
+            },
+            {
+                "$unwind": "$phones"
+            },
+            {
+                "$group": {
+                    "_id": {"clientNbr": "$clientNbr", "phone": "$phones.phone"},
+                    "clientNbr": {"$first": "$clientNbr"},
+                    "name": {"$first": "$name"},
+                    "lastName": {"$first": "$lastName"},
+                    "address": {"$first": "$address"},
+                    "active": {"$first": "$active"}
+                }
+            }
+        ]
 
-        clients_with_phones = []
+        clients_with_phones = CLIENTS.aggregate(pipeline)
 
-        clients_list = list(clients)
+        clients_list = list(clients_with_phones)
 
         if clients_list:  #caching#TODO capaz si se podria cachear solo la query getall, pero habria que chequear en toda fncion que modifique toda la db
             redis_key = f"clients:all"#TODO magic query string!
@@ -156,7 +174,7 @@ def getAllClients():
         return clients_list
     except Exception as e:
         print(f"Error finding all clients: {e}")
-        return None'''
+        return None
     
 #============ Modify ===========>
 
@@ -178,5 +196,5 @@ def deleteClient(clientNbr: int):
         return True
 
     except Exception as e:
-        print(f"Error al eliminar cliente: {e}")
+        print(f"Error deleting client: {e}")
         return False
