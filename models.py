@@ -67,7 +67,7 @@ class Bill(BaseModel):
     total: float
     tax: float
     taxxedTotal: float
-    details: List[DetalleFactura]
+    details: List[BillDetail]
     clientNbr: int
 
     @validator('billNbr')
@@ -133,7 +133,7 @@ class Client(BaseModel):
     lastName: str
     address: str
     active: int
-    phones: List[Telefono]
+    phones: List[Phone]
     billNbrs: List[int]
 
     @validator('clientNbr')
