@@ -1,4 +1,4 @@
-import Persistence as p
+import persistence as p
 
 def main():
     p.populateDb()  # This function will populate the database with the data from the csv files
