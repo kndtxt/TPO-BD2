@@ -1,9 +1,11 @@
 from fastapi import APIRouter
+import sys, os
+sys.path.append(os.getcwd())
 from clientService import getAllPhones
 
 router = APIRouter(
   prefix='/phones',
-  tags=['phones', 'client_phones']
+  tags=['phones']
 )
 
 @router.get('/')

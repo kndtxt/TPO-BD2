@@ -1,6 +1,8 @@
 from fastapi import APIRouter
+import sys, os
+sys.path.append(os.getcwd())
 from billService import *
-from api.models import *
+from models import *
 
 router = APIRouter(
   prefix='/bills',
@@ -8,5 +10,5 @@ router = APIRouter(
 )
 
 @router.post('/')
-async def create_bill(bill: Factura): # TODO: modify this since Factura is a class
+async def create_bill(bill: Bill): 
   return insertBill(bill)

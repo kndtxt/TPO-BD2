@@ -2,7 +2,7 @@
 from persistence import mydb, mongoClient, session, BILLS, CLIENTS, PRODUCTS
 from productService import getProduct
 import cache as c
-from models import Factura
+import models
 from pydantic import ValidationError
 from functools import singledispatch
 

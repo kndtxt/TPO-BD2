@@ -2,7 +2,6 @@
 import pymongo
 import csv
 from datetime import datetime, date
-
 #============ Dbs Connection ===========>
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = mongoClient["DB2TPE"]    #Mongo only creates a db when it gets content

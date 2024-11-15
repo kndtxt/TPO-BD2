@@ -1,20 +1,22 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
+from typing import Annotated
+import sys, os
+sys.path.append(os.getcwd())
 from clientService import getAllClients, getClient, deleteClient
 from api.models import *
 
 router = APIRouter(
   prefix='/clients',
-  tags=['clients']
+  tags=['clients'] 
 )
 
-@router.get('/')
-async def get_clients():
-  return getAllClients()
 
-@router.get('/') # TODO: fix same endpoint
-async def get_client_by_name_and_surname(body: NameAndSurname):
-  [name, surname] = body
-  return getClient(name, surname)
+@router.get('/')
+async def get_client(name: str | None = None, surname: str | None = None):
+  if (isinstance(name, type(None)) or isinstance(surname, type(None))):
+    return {'data': getAllClients()}
+  else:
+    return {'data': getClient(name, surname)}
 
 @router.get('/{client_id}')
 async def get_client_by_id(client_id: int):
