@@ -203,7 +203,7 @@ def populateDb():
         for product in products:
             insertProduct(products[product])
         
-    #==== Factura Data ====>
+    #==== Bill Data ====>
     bills = {}
     with open('./resources/e01_factura.csv', mode="r",encoding='ISO-8859-1') as billFile:
         billReader = csv.reader(billFile, delimiter=';')
