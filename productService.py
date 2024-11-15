@@ -21,7 +21,8 @@ def insertProduct(product):
         product if created. None otherwise.
     """ 
     try:
-        codProduct = int(product['codProduct']) if isinstance(product['codProduct'], str) else product['codProduct']
+        oldCodProduct = product['codProduct']
+        codProduct = int(oldCodProduct) if isinstance(oldCodProduct, str) else oldCodProduct
         query = {"codProduct": codProduct}
         aux_prod = PRODUCTS.find_one(query)
         if aux_prod is not None:
@@ -51,9 +52,9 @@ def getProduct(codProd: int):
     """
     try:
         redis_key = f"product:{codProd}"     #first search in cached data
-        cached_client = c.cache_get(redis_key)
-        if cached_client:
-            return cached_client
+        cached_prod = c.cache_get(redis_key)
+        if cached_prod:
+            return cached_prod
 
         query = {"codProduct": codProd}
         product = PRODUCTS.find_one(query)
@@ -66,3 +67,8 @@ def getProduct(codProd: int):
         print(f"Error finding product: {e}")
         return None
             
+
+#============ Modify ===========>
+
+
+#============ Delete ===========>

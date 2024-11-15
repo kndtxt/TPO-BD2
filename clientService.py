@@ -22,7 +22,7 @@ def insertClient(client):
         client if created. None otherwise.
     """ 
     try:
-        redis_key = f"clientes:{client['nombre']}:{client['apellido']}"#forced delete id cached in redis
+        redis_key = f"clients:{client['nombre']}:{client['apellido']}"#forced delete id cached in redis
         cached_clients = c.cache_get(redis_key)
         if cached_clients:
             c.cache_del(redis_key)
@@ -62,7 +62,7 @@ def _(nroCliente: int):
         client if existent. None otherwise.
     """
     try:
-        redis_key = f"cliente:{nroCliente}"
+        redis_key = f"client:{nroCliente}"
         cached_client = c.cache_get(redis_key)
         if cached_client:
             return cached_client
@@ -92,8 +92,7 @@ def _(nombre: str, apellido: str):
         client if existent. None otherwise.
     """
     try:
-
-        redis_key = f"clientes:{nombre}:{apellido}"
+        redis_key = f"clients:{nombre}:{apellido}"
         cached_clients = c.cache_get(redis_key)
         if cached_clients:
             return cached_clients
@@ -112,25 +111,59 @@ def _(nombre: str, apellido: str):
 def getAllClients():
     """
     Searches for all the clients in database.
-    Caches all users afterwards.
+    Caches query afterwards.
 
     Returns:
         client list if existent. None otherwise.
     """
     try:
+        redis_key = f"clients:all"
+        cached_clients = c.cache_get(redis_key)
+        if cached_clients:
+            return cached_clients
+
         clients = CLIENTS.find()
 
         clients_list = list(clients)
 
-        if clients_list:  #caching
-            for client in clients_list:#TODO capaz si se podria cachear solo la query getall, pero habria que chequear en toda fncion que modifique toda la db
-                redis_key = f"cliente:{client['nroCliente']}"#TODO magic query string!
-                c.cache_set(redis_key, client)
+        if clients_list:  #caching#TODO capaz si se podria cachear solo la query getall, pero habria que chequear en toda fncion que modifique toda la db
+            redis_key = f"clients:all"#TODO magic query string!
+            c.cache_set(redis_key, clients_list)
         
         return clients_list
     except Exception as e:
         print(f"Error finding all clients: {e}")
         return None
+
+'''def getAllPhones():
+    """
+    Searches for all the phones in database.
+    Caches query afterwards.
+
+    Returns:
+        phone list if existent. None otherwise.
+    """
+    try:
+        redis_key = f"phones:all"
+        cached_clients = c.cache_get(redis_key)
+        if cached_clients:
+            return cached_clients
+        
+        clients = CLIENTS.find({telefonos: {"$ne": []}})
+        CLIENTS.aggregate({$match:})
+
+        clients_with_phones = []
+
+        clients_list = list(clients)
+
+        if clients_list:  #caching#TODO capaz si se podria cachear solo la query getall, pero habria que chequear en toda fncion que modifique toda la db
+            redis_key = f"clients:all"#TODO magic query string!
+            c.cache_set(redis_key, clients_list)
+        
+        return clients_list
+    except Exception as e:
+        print(f"Error finding all clients: {e}")
+        return None'''
     
 #============ Modify ===========>
 
@@ -144,7 +177,7 @@ def deleteClient(nroCliente: int):
             print(f"No client with nroCliente {nroCliente}.")
             return True
 
-        CLIENTS.delete_one(query)
+        CLIENTS.delete_one(query)#TODO habria q borrar las bills relacionadass tmb?
         #TODO ver tema cache que querys corresponde borrar de redis aca, por ahora solo se que esta si
         redis_key = f"cliente:{nroCliente}"
         c.cache_delete(redis_key)

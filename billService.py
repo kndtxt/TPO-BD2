@@ -1,49 +1,88 @@
 #============ Imports ==================>
-from persistence import mydb
+from persistence import mydb, mongoClient, session
+from productService import getProduct
 import cache as c
 from models import Factura
 from pydantic import ValidationError
 from functools import singledispatch
 
 #============ Dbs Connection ===========>
+
 BILLS = mydb["bills"]
 CLIENTS = mydb["clients"]
 PRODUCTS = mydb["products"]
 BILLS.create_index([('nroFactura', 1)], unique=True)
 
+#session to allow transactional behaviour
 
 
 
 
 #============ Setters ==================>
 
-def populateBill(bill): 
+def insertBill(bill): 
     """
     Populates db with provided dataset. Assumes stocks need not be updated.
     Args:
         bill(Bill): the bill to be inserted
     """ 
     try:
-        clientQuery = {"clientNbr": bill["clientNbr"]}
+        oldClientNbr = bill['clientNbr']
+        clientNbr = int(oldClientNbr) if isinstance(oldClientNbr, str) else oldClientNbr
+        clientQuery = {"clientNbr": clientNbr}
         operation = {"$push": {"billNbrs": bill["billNbr"]}} 
         updateClient = CLIENTS.update_one(clientQuery, operation)       #add reference to bill that client has purchased
         if updateClient.matched_count <= 0: raise Exception(f"Client for bill not found.")
         
         for detail in bill["details"]:
-            productQuery = {"codProduct": detail["codProduct"]}
+            oldCodProduct = detail['codProduct']
+            codProduct = int(oldCodProduct) if isinstance(oldCodProduct, str) else oldCodProduct
+            productQuery = {"codProduct": codProduct}
             updateProduct = PRODUCTS.update_one(productQuery, operation)    #add reference to bill where product was billed
             if updateProduct.matched_count <= 0: raise Exception(f"Product for bill not found.")             
 
-        newBill = BILLS.insert_one(bill)
+        aux_bill = Factura(**bill)#validate by model
+        newBill = PRODUCTS.insert_one(aux_bill.dict())
         return newBill
-    
+    except ValidationError as e:
+        print(f"Data validation error: {e}")
     except Exception as e:
-        print(f'Exception found: {e}')
+        print(f'Cannot insert bill: {e}')
 
 
-def insertBill():
+def insertNewBill(bill):
     """
-    insert.
+    Insert given bill into db and updates product stock with transactional behaviour.
     Args:
         bill(Bill): the bill to be inserted
+    Returns:
+        Bill if inserted. None otherwise.
     """ 
+    try:
+        session.start_transaction()
+        insertBill(bill)
+        for detail in bill["details"]:
+            productNbr = detail["productNbr"]
+            product = getProduct(productNbr)
+            
+            if product is None:
+                session.abort_transaction()
+                raise Exception(f"Product to bill not found")
+            
+            newStock = product.stock - (detail.amount)
+            if newStock<0: 
+                session.abort_transaction()
+                raise Exception(f"Requested more items than available stock")
+            
+            productQuery = {"prodctNbr": productNbr}
+            operation = {"$set":{"stock":newStock}}
+            result = PRODUCTS.update_one(productQuery, operation)
+            if result.matched_count <= 0:
+                session.abort_transaction()
+                raise Exception(f"Billing error")
+            
+        session.commit_transaction()
+    except Exception as e:
+        print("Billing error: {e}")
+        return None
+
