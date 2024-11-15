@@ -15,24 +15,6 @@ mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = mongoClient["mydatabase"]    #Mongo only creates a db when it gets content
 r = redis.Redis()
 
-<<<<<<< HEAD
-#============ Clients ===========>
-clients = mongoClient["DB2TPE"]["clients"]
-
-def insertClient(client):
-    try:
-        newClient = clients.insert_one(client)
-=======
-#============ Inserting Data ===========>
-#r.mset({"Croatia": "Zagreb", "Bahamas":"Nassau", "Argentina":"Chuwut"})
-#print(r.get("Argentina").decode("utf-8"))
-
-#mydb = mongoClient["mydatabase"]
-#mycol = mydb["customers"]
-#print(mongoClient)
-#print(mydb)
-#print(mycol)
-
 #============ Cache Methods ===========>
 def remove_id_from_client(client_data):
     if isinstance(client_data, list):
@@ -72,28 +54,10 @@ def cache_set(key, data, ttl=3600):  # TTL 1 hora
 
 #============ Clients ===========>
 clients = mongoClient["DB2TPE"]["clients"]
-clients.create_index([("nroCliente", pymongo.ASCENDING)], unique=True)
 
-def insertClient(nroCliente, nombre, apellido, direccion, activo, codigoArea, nroTel, tipoTel):
+def insertClient(client):
     try:
-        #nos fijamos si ya estaba cacheada la lista de esa combinación, de ser asi borramos para forzar q se actualice
-        redis_key = f"clientes:{nombre}:{apellido}"
-        cached_clients = cache_get(redis_key)
-        if cached_clients:
-            r.delete(redis_key)
-
-        cliente = Cliente(
-            nroCliente=nroCliente,
-            nombre=nombre,
-            apellido=apellido,
-            direccion=direccion,
-            activo=activo,
-            telefono=Telefono(codigoArea=codigoArea, nroTel=nroTel, tipoTel=tipoTel)
-        )  # chequea model
-        cliente_dict = cliente.dict()
-
-        newClient = clients.insert_one(cliente_dict)
->>>>>>> cacheClient
+        newClient = clients.insert_one(client)
         return newClient
     except ValidationError as e:
         print(f"Data validation error: {e}")
@@ -110,16 +74,10 @@ def getClient(*client):
 @getClient.register
 def _(nroCliente: int):
     try:
-<<<<<<< HEAD
-        query = {"nroCliente": nroCliente}
-        #aca chequeamos si el dato esta cacheado
-        #return cached
-=======
         redis_key = f"cliente:{nroCliente}"
         cached_client = cache_get(redis_key)
         if cached_client:
             return cached_client 
->>>>>>> cacheClient
 
         query = {"nroCliente": nroCliente}
         client = clients.find_one(query)
@@ -135,6 +93,7 @@ def _(nroCliente: int):
 @getClient.register
 def _(nombre: str, apellido: str):
     try:
+
         redis_key = f"clientes:{nombre}:{apellido}"
         cached_clients = cache_get(redis_key)
         if cached_clients:
