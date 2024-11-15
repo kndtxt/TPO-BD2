@@ -3,7 +3,7 @@ import clientService as cs
 import productService as ps
 
 def main():
-    #p.populateDb()  # This function will populate the database with the data from the csv files   
+    p.populateDb()  # This function will populate the database with the data from the csv files   
 
     client = cs.getClient(1)
     print(client)
@@ -17,8 +17,10 @@ def main():
     product['name'] = "Esencia de Saracatunga"
     print(f"Modifying product {product}")
     ps.modifyProduct(product)
-    print(f"New product {ps.modifyProduct(1)}")
+    print(f"New product {ps.getProduct(1)}")
 
     p.session.end_session()   #end session and abort all ongoing transactions
+
+    
 
 main()

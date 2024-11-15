@@ -69,7 +69,11 @@ def modifyProduct(product):
     """
     try:
         filter = {"codProduct": product['codProduct']}
-        operation = {"$set": product}
+        fields = {}
+        for key, value in product.items():
+            if key != "_id" and key != "productNbr":
+                fields[key] = value
+        operation = {"$set": fields}
         result = PRODUCTS.update_one(filter, operation)
         if result.modified_count <=0: 
             raise Exception("No products modified")

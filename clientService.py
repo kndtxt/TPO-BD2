@@ -58,7 +58,7 @@ def _(clientNbr: int):
         cached_client = c.cache_get(redis_key)
         if cached_client:
             return cached_client
-        
+
         query = {"clientNbr": clientNbr}
         client = CLIENTS.find_one(query)
 
@@ -187,7 +187,11 @@ def modifyClient(client):
     """
     try:
         filter = {"clientNbr": client['clientNbr']}
-        operation = {"$set": client}
+        fields = {}
+        for key, value in client.items():
+            if key != "_id" and key != "clientNbr":
+                fields[key] = value
+        operation = {"$set": fields}
         result = CLIENTS.update_one(filter, operation)
         if result.modified_count <=0: raise Exception("No clients modified")
         

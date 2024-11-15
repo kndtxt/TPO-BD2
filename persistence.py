@@ -7,12 +7,12 @@ from datetime import datetime, date
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = mongoClient["DB2TPE"]    #Mongo only creates a db when it gets content
 
-'''if "bills" in mydb.list_collection_names():
+if "bills" in mydb.list_collection_names():
     mydb["bills"].drop()
 if "clients" in mydb.list_collection_names():
     mydb["clients"].drop()
 if "products" in mydb.list_collection_names():
-    mydb["products"].drop()'''
+    mydb["products"].drop()
 
 BILLS = mydb["bills"]
 BILLS.create_index([('billNbr', 1)], unique=True)
@@ -62,8 +62,8 @@ def populateDb():
                 "phoneNbr": int(row[1]),
                 "phoneType": row[2]
             })
-
-        CLIENTS.insert_many(clients.values())
+    for client in clients:
+            CLIENTS.insert_one(clients[client])
 
 
 #==== Product Data ====>
@@ -84,8 +84,8 @@ def populateDb():
                 "stock" : int(row[5]),
                 "billNbrs" : []      #when a bill is inserted, id is added to the list
             }
-        for product in products:
-            PRODUCTS.insert_one(products[product])
+    for product in products:
+        PRODUCTS.insert_one(products[product])
         
 #==== Factura Data ====>
     bills = {}
