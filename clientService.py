@@ -5,6 +5,7 @@ import cache as c
 #from models import Cliente
 #from pydantic import ValidationError
 from functools import singledispatch
+from pymongo.errors import DuplicateKeyError
 
 #============ Setters ==================>
 def insertClient(client):
@@ -41,9 +42,9 @@ def getClient(*client):
     raise NotImplementedError(f"Unsupported type: {type(client)}")
 
 @getClient.register
-def _(nroCliente: int):
+def _(clientNbr: int):
     """
-    Searches for the client with the given nroCliente in database.
+    Searches for the client with the given clientNbr in database.
     Uses redis caching.
 
     Args:
@@ -53,12 +54,12 @@ def _(nroCliente: int):
         client if existent. None otherwise.
     """
     try:
-        redis_key = f"client:{nroCliente}"
+        redis_key = f"client:{clientNbr}"
         cached_client = c.cache_get(redis_key)
         if cached_client:
             return cached_client
-
-        query = {"clientNbr": nroCliente}
+        
+        query = {"clientNbr": clientNbr}
         client = CLIENTS.find_one(query)
 
         if client:#caching
@@ -70,25 +71,25 @@ def _(nroCliente: int):
         return None
 
 @getClient.register
-def _(nombre: str, apellido: str):
+def _(name: str, lastName: str):
     """
-    Searches for the client with the given nombre and apellido in database.
+    Searches for the client with the given name and lastName in database.
     Uses redis caching.
 
     Args:
         str: the client name.
-        str: the client surname.
+        str: the client lastName.
 
     Returns:
         client if existent. None otherwise.
     """
     try:
-        redis_key = f"clients:{nombre}:{apellido}"
+        redis_key = f"clients:{name}:{lastName}"
         cached_clients = c.cache_get(redis_key)
         if cached_clients:
             return cached_clients
 
-        query = {"nombre": nombre, "apellido": apellido}
+        query = {"name": name, "lastName": lastName}
         clients_list = list(CLIENTS.find(query))
 
         if clients_list:#caching
@@ -126,7 +127,7 @@ def getAllClients():
         print(f"Error finding all clients: {e}")
         return None
 
-'''def getAllPhones():
+def getAllPhones():
     """
     Searches for all the phones in database.
     Caches query afterwards.
@@ -140,12 +141,30 @@ def getAllClients():
         if cached_clients:
             return cached_clients
         
-        clients = CLIENTS.find({telefonos: {"$ne": []}})
-        CLIENTS.aggregate({$match:})
+        pipeline = [
+            {
+                "$match": {
+                    "phones": {"$ne": []}
+                }
+            },
+            {
+                "$unwind": "$phones"
+            },
+            {
+                "$group": {
+                    "_id": {"clientNbr": "$clientNbr", "phone": "$phones.phone"},
+                    "clientNbr": {"$first": "$clientNbr"},
+                    "name": {"$first": "$name"},
+                    "lastName": {"$first": "$lastName"},
+                    "address": {"$first": "$address"},
+                    "active": {"$first": "$active"}
+                }
+            }
+        ]
 
-        clients_with_phones = []
+        clients_with_phones = CLIENTS.aggregate(pipeline)
 
-        clients_list = list(clients)
+        clients_list = list(clients_with_phones)
 
         if clients_list:  #caching#TODO capaz si se podria cachear solo la query getall, pero habria que chequear en toda fncion que modifique toda la db
             redis_key = f"clients:all"#TODO magic query string!
@@ -154,7 +173,7 @@ def getAllClients():
         return clients_list
     except Exception as e:
         print(f"Error finding all clients: {e}")
-        return None'''
+        return None
     
 #============ Modify ===========>
 
@@ -180,21 +199,21 @@ def modifyClient(client):
         return None
 
 #============ Delete ===========>
-def deleteClient(nroCliente: int):
+def deleteClient(clientNbr: int):
     try:
-        client = getClient(nroCliente)
+        client = getClient(clientNbr)
 
         if not client:
-            print(f"No client with nroCliente {nroCliente}.")
+            print(f"No client with clientNbr {clientNbr}.")
             return True
 
         CLIENTS.delete_one(query)#TODO habria q borrar las bills relacionadass tmb?
         #TODO ver tema cache que querys corresponde borrar de redis aca, por ahora solo se que esta si
-        redis_key = f"cliente:{nroCliente}"
+        redis_key = f"cliente:{clientNbr}"
         c.cache_delete(redis_key)
 
         return True
 
     except Exception as e:
-        print(f"Error al eliminar cliente: {e}")
+        print(f"Error deleting client: {e}")
         return False

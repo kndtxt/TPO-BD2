@@ -1,6 +1,7 @@
 #============ Imports ==================>
 import pymongo
 import csv
+from datetime import datetime, date
 
 #============ Dbs Connection ===========>
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
@@ -38,11 +39,11 @@ def populateDb():
             address = row[3]
             active = row[4]
             clients[clientNbr] = {
-                "clientNbr": clientNbr,
+                "clientNbr": int(clientNbr),
                 "name": name,
                 "lastName": lastName,
                 "address": address,
-                "active": active,
+                "active": int(active),
                 "phones": [], 
                 "billNbrs": []
             }
@@ -57,8 +58,8 @@ def populateDb():
                 clients[clientNbr]["phones"] = []
 
             clients[clientNbr]["phones"].append({
-                "areaCode": row[0],   
-                "phoneNbr": row[1],
+                "areaCode": int(row[0]),   
+                "phoneNbr": int(row[1]),
                 "phoneType": row[2]
             })
 
@@ -75,12 +76,12 @@ def populateDb():
         for row in productReader:
             codProduct = row[0]
             products[codProduct] = {
-                "codProduct": codProduct,
+                "codProduct": int(codProduct),
                 "brand": row[1],
                 "name" : row[2],
                 "description" : row[3],
-                "price" : row[4],
-                "stock" : row[5],
+                "price" : float(row[4]),
+                "stock" : int(row[5]),
                 "billNbrs" : []      #when a bill is inserted, id is added to the list
             }
         for product in products:
@@ -96,12 +97,12 @@ def populateDb():
             billNbr = row[0]
             clientNbr = row[5]
             bills[billNbr] = {
-                "billNbr": billNbr,
-                "date": row[1],
-                "total": row[2],
-                "tax": row[3],
-                "taxxedTotal": row[4],
-                "clientNbr": clientNbr,
+                "billNbr": int(billNbr),
+                "date": datetime.combine(date.fromisoformat(row[1]), datetime.min.time()),
+                "total": float(row[2]),
+                "tax": float(row[3]),
+                "taxxedTotal": float(row[4]),
+                "clientNbr": int(clientNbr),
                 "details": []
             }
 
@@ -112,9 +113,9 @@ def populateDb():
             for row in billDetailReader:
                 billNbr = row[0]
                 bills[billNbr]["details"].append({
-                    "codProduct": codProduct,
-                    "itemNbr": row[2],
-                    "amount": row[3],
+                    "codProduct": int(codProduct),
+                    "itemNbr": int(row[2]),
+                    "amount": float(row[3]),
                 })
     
     for bill in bills:
