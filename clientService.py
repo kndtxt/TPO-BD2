@@ -108,8 +108,6 @@ def _(name: str, lastName: str):
         print(f"Error finding client: {e}")
         return None
     
-def getClientSpent(clientNbr: int):
-    return None#TODO doit
 
 def getAllClients():
     """
@@ -137,15 +135,6 @@ def getAllClients():
     except Exception as e:
         print(f"Error finding all clients: {e}")
         return None
-
-def getAllClientsBillAmount():
-    return None#TODO doit
-
-def getClientsWithBills():
-    return None#TODO doit
-
-def getClientsWithNoBills():
-    return None#TODO doit
 
 def getAllPhones():
     """
