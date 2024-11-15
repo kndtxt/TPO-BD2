@@ -82,7 +82,7 @@ class Bill(BaseModel):
             raise ValueError('clientNbr must be higher than 0')
         return v
     
-    @validator('total', 'iva', 'totalConIva')
+    @validator('total', 'tax', 'taxxedTotal')
     def validate_total(cls, v):
         if v <= 0:
             raise ValueError('total must be positive')

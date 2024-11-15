@@ -1,7 +1,7 @@
 #============ Imports ==================>
 from persistence import mydb, PRODUCTS
 import cache as c
-from models import Producto
+from models import Product
 from pydantic import ValidationError
 from functools import singledispatch
 
@@ -25,7 +25,7 @@ def insertProduct(product):
             print(f"Product for codProduct: {codProduct} already exists!")
             return None
 
-        aux_prod = Producto(**product)#validate by model
+        aux_prod = Product(**product)#validate by model
         newProduct = PRODUCTS.insert_one(aux_prod.dict())
         return newProduct
     except ValidationError as e:

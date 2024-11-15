@@ -2,7 +2,7 @@
 from persistence import mydb, mongoClient, CLIENTS
 from productService import getProduct
 import cache as c
-from models import Cliente
+from models import Client
 from pydantic import ValidationError
 from functools import singledispatch
 from pymongo.errors import DuplicateKeyError
@@ -24,7 +24,7 @@ def insertClient(client):
         if cached_clients:
             c.cache_del(redis_key)
 
-        aux_client = Cliente(**client)#validate by model
+        aux_client = Client(**client)#validate by model
         newClient = CLIENTS.insert_one(aux_client.dict())
         return newClient
 
