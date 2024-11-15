@@ -1,13 +1,9 @@
 #============ Imports ==================>
-from persistence import mydb
+from persistence import mydb, PRODUCTS
 import cache as c
 from models import Producto
 from pydantic import ValidationError
 from functools import singledispatch
-
-#============ Dbs Connection ===========>
-PRODUCTS = mydb["clients"]
-PRODUCTS.create_index([('codProduct', 1)], unique=True)
 
 #============ Setters ==================>
 def insertProduct(product):

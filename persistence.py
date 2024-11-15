@@ -1,12 +1,16 @@
 #============ Imports ==================>
 import pymongo
 import csv
-from clientService import insertClient, insertBill
-from productService import insertProduct
 
 #============ Dbs Connection ===========>
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = mongoClient["DB2TPE"]    #Mongo only creates a db when it gets content
+BILLS = mydb["bills"]
+BILLS.create_index([('nroFactura', 1)], unique=True)
+CLIENTS = mydb["clients"]
+CLIENTS.create_index([('nroCliente', 1)], unique=True)
+PRODUCTS = mydb["products"]
+PRODUCTS.create_index([('codProduct', 1)], unique=True)
 session = mongoClient.start_session()
 
 #=== POPULATOR ===>
@@ -51,7 +55,7 @@ def populateDb():
             })
 
         for client in clients:
-            insertClient(clients[client])
+            CLIENTS.insert_one(clients[client])
 
 
 #==== Product Data ====>
@@ -73,7 +77,7 @@ def populateDb():
                 "billNbrs" : []      #when a bill is inserted, id is added to the list
             }
         for product in products:
-            insertProduct(products[product])
+            PRODUCTS.insert_one(products[product])
         
 #==== Factura Data ====>
     bills = {}
@@ -107,7 +111,7 @@ def populateDb():
                 })
     
     for bill in bills:
-        insertBill(bills[bill])
+        BILLS.insert_one(bills[bill])
 
             
 

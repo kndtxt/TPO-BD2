@@ -1,14 +1,10 @@
 #============ Imports ==================>
-from persistence import mydb, mongoClient
+from persistence import mydb, mongoClient, CLIENTS
 from productService import getProduct
 import cache as c
 from models import Cliente
 from pydantic import ValidationError
 from functools import singledispatch
-
-#============ Dbs Connection ===========>
-CLIENTS = mydb["clients"]
-CLIENTS.create_index([('nroCliente', 1)], unique=True)
 
 #============ Setters ==================>
 def insertClient(client):
