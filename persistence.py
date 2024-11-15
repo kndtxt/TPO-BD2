@@ -5,10 +5,18 @@ import csv
 #============ Dbs Connection ===========>
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = mongoClient["DB2TPE"]    #Mongo only creates a db when it gets content
+
+if "bills" in mydb.list_collection_names():
+    mydb["bills"].drop()
+if "clients" in mydb.list_collection_names():
+    mydb["clients"].drop()
+if "products" in mydb.list_collection_names():
+    mydb["products"].drop()
+
 BILLS = mydb["bills"]
-BILLS.create_index([('nroFactura', 1)], unique=True)
+BILLS.create_index([('billNbr', 1)], unique=True)
 CLIENTS = mydb["clients"]
-CLIENTS.create_index([('nroCliente', 1)], unique=True)
+CLIENTS.create_index([('clientNbr', 1)], unique=True)
 PRODUCTS = mydb["products"]
 PRODUCTS.create_index([('codProduct', 1)], unique=True)
 session = mongoClient.start_session()
@@ -54,8 +62,7 @@ def populateDb():
                 "phoneType": row[2]
             })
 
-        for client in clients:
-            CLIENTS.insert_one(clients[client])
+        CLIENTS.insert_many(clients.values())
 
 
 #==== Product Data ====>
