@@ -76,3 +76,4 @@ def insertNewBill(bill):
         print("Billing error: {e}")
         return None
 
+#============ Getters ==================>
