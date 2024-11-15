@@ -23,9 +23,15 @@ def insertClient(client):
         if cached_clients:
             c.cache_del(redis_key)
 
+        nroCliente = int(client['nroCliente']) if isinstance(client['nroCliente'], str) else client['nroCliente']
+        if getClient(nroCliente) is not None:
+            print(f"Client for nroCliente: {nroCliente} already exists!")
+            return None
+
         aux_client = Cliente(**client)#validamos segun model
         newClient = clients.insert_one(aux_client.dict())
         return newClient
+
     except ValidationError as e:
         print(f"Data validation error: {e}")
     except Exception as e:
