@@ -23,7 +23,8 @@ def insertClient(client):
         if cached_clients:
             c.cache_del(redis_key)
 
-        newClient = clients.insert_one(client)
+        aux_client = Cliente(**client)#validamos segun model
+        newClient = clients.insert_one(aux_client.dict())
         return newClient
     except ValidationError as e:
         print(f"Data validation error: {e}")
@@ -93,16 +94,13 @@ def populateDb():
                 "nombre": nombre,
                 "apellido": apellido,
                 "direccion": direccion,
-                "activo": activo
+                "activo": activo,
+                "telefonos": [] 
             }
         
     with open('./resources/e01_telefono.csv', mode="r",encoding='ISO-8859-1') as phonesFile:
         phonesReader = csv.reader(phonesFile, delimiter=';')
         phoneHeaders = next(phonesReader)
-
-        if clientes[nroCliente] is None:        #if a client doesn't have personal data asociated, we insert only phone data
-            clientes[nroCliente] = {}
-            
 
         for row in phonesReader:
 
