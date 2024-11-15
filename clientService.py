@@ -5,6 +5,7 @@ import cache as c
 from models import Cliente
 from pydantic import ValidationError
 from functools import singledispatch
+from pymongo.errors import DuplicateKeyError
 
 #============ Setters ==================>
 def insertClient(client):
@@ -22,13 +23,6 @@ def insertClient(client):
         cached_clients = c.cache_get(redis_key)
         if cached_clients:
             c.cache_del(redis_key)
-        
-        nroCliente = int(client['nroCliente']) if isinstance(client['nroCliente'], str) else client['nroCliente']
-        query = {"nroCliente": nroCliente}
-        aux_client = CLIENTS.find_one(query)
-        if aux_client is not None:
-            print(f"Client for nroCliente: {nroCliente} already exists!")
-            return None
 
         aux_client = Cliente(**client)#validate by model
         newClient = CLIENTS.insert_one(aux_client.dict())
@@ -36,6 +30,9 @@ def insertClient(client):
 
     except ValidationError as e:
         print(f"Data validation error: {e}")
+    except DuplicateKeyError as e:
+        print(f"Client for nroCliente: {client['clientNbr']} already exists!")
+        return None
     except Exception as e:
         print(e)
         return None
@@ -46,9 +43,9 @@ def getClient(*client):
     raise NotImplementedError(f"Unsupported type: {type(client)}")
 
 @getClient.register
-def _(nroCliente: int):
+def _(clientNbr: int):
     """
-    Searches for the client with the given nroCliente in database.
+    Searches for the client with the given clientNbr in database.
     Uses redis caching.
 
     Args:
@@ -58,12 +55,12 @@ def _(nroCliente: int):
         client if existent. None otherwise.
     """
     try:
-        redis_key = f"client:{nroCliente}"
+        redis_key = f"client:{clientNbr}"
         cached_client = c.cache_get(redis_key)
         if cached_client:
             return cached_client
-
-        query = {"nroCliente": nroCliente}
+        
+        query = {"clientNbr": clientNbr}
         client = CLIENTS.find_one(query)
 
         if client:#caching
@@ -75,25 +72,25 @@ def _(nroCliente: int):
         return None
 
 @getClient.register
-def _(nombre: str, apellido: str):
+def _(name: str, lastName: str):
     """
-    Searches for the client with the given nombre and apellido in database.
+    Searches for the client with the given name and lastName in database.
     Uses redis caching.
 
     Args:
         str: the client name.
-        str: the client surname.
+        str: the client lastName.
 
     Returns:
         client if existent. None otherwise.
     """
     try:
-        redis_key = f"clients:{nombre}:{apellido}"
+        redis_key = f"clients:{name}:{lastName}"
         cached_clients = c.cache_get(redis_key)
         if cached_clients:
             return cached_clients
 
-        query = {"nombre": nombre, "apellido": apellido}
+        query = {"name": name, "lastName": lastName}
         clients_list = list(CLIENTS.find(query))
 
         if clients_list:#caching
@@ -165,17 +162,17 @@ def getAllClients():
 
 
 #============ Delete ===========>
-def deleteClient(nroCliente: int):
+def deleteClient(clientNbr: int):
     try:
-        client = getClient(nroCliente)
+        client = getClient(clientNbr)
 
         if not client:
-            print(f"No client with nroCliente {nroCliente}.")
+            print(f"No client with clientNbr {clientNbr}.")
             return True
 
         CLIENTS.delete_one(query)#TODO habria q borrar las bills relacionadass tmb?
         #TODO ver tema cache que querys corresponde borrar de redis aca, por ahora solo se que esta si
-        redis_key = f"cliente:{nroCliente}"
+        redis_key = f"cliente:{clientNbr}"
         c.cache_delete(redis_key)
 
         return True
