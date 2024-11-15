@@ -61,8 +61,8 @@ def populateDb():
                 "phoneNbr": int(row[1]),
                 "phoneType": row[2]
             })
-
-        CLIENTS.insert_many(clients.values())
+    for client in clients:
+            CLIENTS.insert_one(clients[client])
 
 
 #==== Product Data ====>
@@ -83,8 +83,8 @@ def populateDb():
                 "stock" : int(row[5]),
                 "billNbrs" : []      #when a bill is inserted, id is added to the list
             }
-        for product in products:
-            PRODUCTS.insert_one(products[product])
+    for product in products:
+        PRODUCTS.insert_one(products[product])
         
 #==== Factura Data ====>
     bills = {}

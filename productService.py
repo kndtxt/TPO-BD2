@@ -17,12 +17,10 @@ def insertProduct(product):
         product if created. None otherwise.
     """ 
     try:
-        oldCodProduct = product['codProduct']
-        codProduct = int(oldCodProduct) if isinstance(oldCodProduct, str) else oldCodProduct
-        query = {"codProduct": codProduct}
+        query = {"codProduct": product['codProduct']}
         aux_prod = PRODUCTS.find_one(query)
         if aux_prod is not None:
-            print(f"Product for codProduct: {codProduct} already exists!")
+            print(f"Product for codProduct: {product['codProduct']} already exists!")
             return None
 
         aux_prod = Product(**product)#validate by model
@@ -65,4 +63,29 @@ def getProduct(codProd: int):
             
 
 #============ Modify ===========>
+def modifyProduct(product):
+    """
+    Modifies a persisted product.
+    Args:
+        product(Product): the product to be modified
+    Returns:
+        True if modified. False otherwise
+    """
+    try:
+        filter = {"codProduct": product['codProduct']}
+        fields = {}
+        for key, value in product.items():
+            if key != "_id" and key != "productNbr":
+                fields[key] = value
+        operation = {"$set": fields}
+        result = PRODUCTS.update_one(filter, operation)
+        if result.modified_count <=0: 
+            raise Exception("No products modified")
+            return False
+        
+        #TODO modify cache here!!!!!!!!!!!
+        return True
+    except Exception as e:
+        print(f"Error modifying product: {e}")
+        return False
 

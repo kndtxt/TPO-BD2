@@ -31,7 +31,7 @@ def insertBill(bill):
             updateProduct = PRODUCTS.update_one(productQuery, operation)    #add reference to bill where product was billed
             if updateProduct.matched_count <= 0: raise Exception(f"Product for bill not found.")             
 
-        aux_bill = Factura(**bill)#validate by model
+        aux_bill = Bill(**bill)#validate by model
         newBill = BILLS.insert_one(aux_bill.dict())
         return newBill
     except ValidationError as e:

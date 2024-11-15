@@ -8,6 +8,9 @@ from bson import ObjectId
 r = redis.Redis()
 
 #============ Methods ===========>
+def flushCache():
+    r.flushdb()
+
 #cause ObjetId is not JSON serializable
 def remove_id_from_client(client_data):
     if isinstance(client_data, list):
@@ -26,13 +29,6 @@ def cache_get(key):
     if cached_data:
         try:
             result = json.loads(cached_data.decode('utf-8'))
-            if isinstance(result, list):
-                for item in result:
-                    if '_id' in item and isinstance(item['_id'], str):
-                        item['_id'] = ObjectId(item['_id'])  # welcome back to ObjectId
-            elif isinstance(result, dict):  # For a single document
-                if '_id' in result and isinstance(result['_id'], str):
-                    result['_id'] = ObjectId(result['_id'])  # welcome back to ObjectId
             return result
         except json.JSONDecodeError as e:
             print(f"Error decoding JSON: {e}")

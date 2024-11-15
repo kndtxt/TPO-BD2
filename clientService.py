@@ -18,10 +18,17 @@ def insertClient(client):
         client if created. None otherwise.
     """ 
     try:
-        redis_key = f"clients:{client['nombre']}:{client['apellido']}"#forced delete id cached in redis
+        redis_key = f"clients:{client['name']}:{client['lastName']}"#forced delete id cached in redis
         cached_clients = c.cache_get(redis_key)
         if cached_clients:
             c.cache_del(redis_key)
+        
+        nroCliente = int(client['clientNbr']) if isinstance(client['clientNbr'], str) else client['clientNbr']
+        query = {"clientNbr": nroCliente}
+        aux_client = CLIENTS.find_one(query)
+        if aux_client is not None:
+            print(f"Client for nroCliente: {nroCliente} already exists!")
+            return None
 
         aux_client = Client(**client)#validate by model
         newClient = CLIENTS.insert_one(aux_client.dict())
@@ -58,7 +65,7 @@ def _(clientNbr: int):
         cached_client = c.cache_get(redis_key)
         if cached_client:
             return cached_client
-        
+
         query = {"clientNbr": clientNbr}
         client = CLIENTS.find_one(query)
 
@@ -100,8 +107,6 @@ def _(name: str, lastName: str):
         print(f"Error finding client: {e}")
         return None
     
-def getClientSpent(clientNbr: int):
-    return None#TODO doit
 
 def getAllClients():
     """
@@ -129,15 +134,6 @@ def getAllClients():
     except Exception as e:
         print(f"Error finding all clients: {e}")
         return None
-
-def getAllClientsBillAmount():
-    return None#TODO doit
-
-def getClientsWithBills():
-    return None#TODO doit
-
-def getClientsWithNoBills():
-    return None#TODO doit
 
 def getAllPhones():
     """
@@ -189,6 +185,30 @@ def getAllPhones():
     
 #============ Modify ===========>
 
+def modifyClient(client):
+    """
+    Modifies a persisted client.
+    Args:
+        fiter(object): the filter that matches with clients to modify.
+    Returns:
+        true if modified. false otherwise
+    """
+    try:
+        filter = {"clientNbr": client['clientNbr']}
+        fields = {}
+        for key, value in client.items():
+            if key != "_id" and key != "clientNbr":
+                fields[key] = value
+        operation = {"$set": fields}
+        result = CLIENTS.update_one(filter, operation)
+        if result.modified_count <=0: raise Exception("No clients modified")
+        
+        #TODO invalidate redis_cache here!!!!!!!!!!!!
+        return True
+
+    except Exception as e:
+        print(f"Error finding all clients: {e}")
+        return None
 
 #============ Delete ===========>
 def deleteClient(clientNbr: int):
