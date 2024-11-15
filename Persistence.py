@@ -23,8 +23,11 @@ def insertClient(client):
         if cached_clients:
             c.cache_del(redis_key)
 
+        
         nroCliente = int(client['nroCliente']) if isinstance(client['nroCliente'], str) else client['nroCliente']
-        if getClient(nroCliente) is not None:
+        query = {"nroCliente": nroCliente}
+        aux_client = clients.find_one(query)
+        if aux_client is not None:
             print(f"Client for nroCliente: {nroCliente} already exists!")
             return None
 
