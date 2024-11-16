@@ -101,8 +101,6 @@ def getAllProductsWithBillNbrs():
         redis_key = f"products:all"
         cached_products = c.cache_multiple_get(redis_key)
         if cached_products:
-            for product in cached_products:
-                product.pop('billNbrs', None)
             return cached_products
 
         products = PRODUCTS.find()
@@ -113,8 +111,6 @@ def getAllProductsWithBillNbrs():
         if products_list:
             redis_key = f"products:all"
             c.cache_set(redis_key, products_list)
-            for product in products_list:
-                product.pop('billNbrs', None)
 
         return products_list
     except Exception as e:
@@ -130,7 +126,7 @@ def getAllBoughtProducts():
     try:
         all_products =  getAllProductsWithBillNbrs()
         if all_products:
-            all_bought_products = [product for product in all_products if 'billNbrs' in product and product['billNbrs']]
+            all_bought_products = [product for product in all_products if len(product['billNbrs'])>0]
             for product in all_bought_products:
                 product.pop('billNbrs', None)
             return all_bought_products

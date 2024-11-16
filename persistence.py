@@ -120,7 +120,22 @@ def populateDb():
                 })
     
     for bill in bills:
-        BILLS.insert_one(bills[bill])
+        oldClientNbr = bills[bill]['clientNbr']
+        clientNbr = int(oldClientNbr) if isinstance(oldClientNbr, str) else oldClientNbr
+        clientQuery = {"clientNbr": clientNbr}
+        operation = {"$push": {"billNbrs": bills[bill]["billNbr"]}} 
+        updateClient = CLIENTS.update_one(clientQuery, operation)       #add reference to bill that client has purchased
+        if updateClient.matched_count <= 0: raise Exception(f"Client for bill not found.")
+        
+        for detail in bills[bill]['details']:
+            oldCodProduct = detail['codProduct']
+            codProduct = int(oldCodProduct) if isinstance(oldCodProduct, str) else oldCodProduct
+            productQuery = {"codProduct": codProduct}
+            updateProduct = PRODUCTS.update_one(productQuery, operation)    #add reference to bill where product was billed
+            if updateProduct.matched_count <= 0: raise Exception(f"Product for bill not found.")             
+
+        #aux_bill = Bill(**bill)#validate by model
+        newBill = BILLS.insert_one(bills[bill])
 
             
 

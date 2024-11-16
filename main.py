@@ -20,6 +20,15 @@ def main():
     print("req 6")
     print(cs.getClientsWithBillAmount())
     #print("req 7") TODO
+    ps.insertProduct({
+                "codProduct": 105,
+                "brand": "starlight",
+                "name" : "saracatunga",
+                "description" : "heyo",
+                "price" : 6.8,
+                "stock" : 8,
+                "billNbrs" : [2]
+            })
     print("req 8")
     print(ps.getAllBoughtProducts())
     #print("req 9") TODO

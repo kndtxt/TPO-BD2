@@ -263,7 +263,7 @@ def getClientsWithNoBills():
     try:
         all_clients =  getAllClientsWithBillNbrs()
         if all_clients:
-            all_clients_without_bills = [client for client in all_clients if client['billNbrs'] is []]
+            all_clients_without_bills = [client for client in all_clients if len(client['billNbrs'])==0]
             for client in all_clients_without_bills:
                 client.pop('billNbrs', None)
             return all_clients_without_bills
