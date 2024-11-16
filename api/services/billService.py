@@ -1,10 +1,9 @@
 #============ Imports ==================>
-from api.persistence.persistence import mydb, mongoClient, session, BILLS, CLIENTS, PRODUCTS
+from api.persistence.persistence import session, BILLS, CLIENTS, PRODUCTS
 from .productService import getProduct
 import api.persistence.cache as c
 from models import Bill
 from pydantic import ValidationError
-from functools import singledispatch
 
 #session to allow transactional behaviour
 
