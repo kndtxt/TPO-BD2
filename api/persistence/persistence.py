@@ -6,12 +6,13 @@ from datetime import datetime, date
 mongoClient = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = mongoClient["DB2TPE"]    #Mongo only creates a db when it gets content
 
-if "bills" in mydb.list_collection_names():
-    mydb["bills"].drop()
-if "clients" in mydb.list_collection_names():
-    mydb["clients"].drop()
-if "products" in mydb.list_collection_names():
-    mydb["products"].drop()
+def drop_all_tables():
+    if "bills" in mydb.list_collection_names():
+        mydb["bills"].drop()
+    if "clients" in mydb.list_collection_names():
+        mydb["clients"].drop()
+    if "products" in mydb.list_collection_names():
+        mydb["products"].drop()
 
 BILLS = mydb["bills"]
 BILLS.create_index([('billNbr', 1)], unique=True)

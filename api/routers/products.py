@@ -1,7 +1,5 @@
 from fastapi import APIRouter
-import sys, os
-sys.path.append(os.getcwd())
-from productService import *
+from services.productService import *
 from models import Product
 
 router = APIRouter(
@@ -11,8 +9,8 @@ router = APIRouter(
 
 @router.get('/{product_id}')
 async def get_product_by_id(product_id: int):
-  return getProduct(product_id)
+  return {'data': getProduct(product_id)}
 
 @router.post('/')
 async def create_product(product: Product):
-  return insertProduct(product)
+  return {'data': insertProduct(product)}

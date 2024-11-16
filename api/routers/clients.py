@@ -1,8 +1,6 @@
 from fastapi import APIRouter, Query
 from typing import Annotated
-import sys, os
-sys.path.append(os.getcwd())
-from clientService import getAllClients, getClient, deleteClient
+from services.clientService import getAllClients, getClient, deleteClient
 from api.models import *
 
 router = APIRouter(
@@ -20,9 +18,9 @@ async def get_client(name: str | None = None, surname: str | None = None):
 
 @router.get('/{client_id}')
 async def get_client_by_id(client_id: int):
-  return getClient(client_id)
+  return {'data': getClient(client_id)}
 
 @router.delete('/{client_id}')
 async def delete_client_by_id(client_id: int):
-  return deleteClient(client_id)
+  return {'data': deleteClient(client_id)}
 

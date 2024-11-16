@@ -1,7 +1,5 @@
 from fastapi import APIRouter
-import sys, os
-sys.path.append(os.getcwd())
-from clientService import getAllPhones
+from services.clientService import getAllPhones
 
 router = APIRouter(
   prefix='/phones',
@@ -10,4 +8,4 @@ router = APIRouter(
 
 @router.get('/')
 async def get_phones():
-  return getAllPhones()
+  return {'data': getAllPhones()}
