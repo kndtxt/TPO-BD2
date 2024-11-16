@@ -17,13 +17,18 @@ def insertClient(client):
         client if created. None otherwise.
     """ 
     try:
-        redis_key = f"clients:{client['name']}:{client['lastName']}"#forced delete id cached in redis
-        cached_clients = c.cache_get(redis_key)
-        if cached_clients:
-            c.cache_del(redis_key)
-
-        #aux_client = Client(**client)#validate by model
-        newClient = CLIENTS.insert_one(client)
+        result = CLIENTS.insert_one(client)
+        newClient = CLIENTS.find_one({"_id": result.inserted_id})
+        #update cache
+        if client['phones'] != []:
+            redis_key = f"phones:all"
+            c.cache_delete(redis_key)
+        redis_key = f"clients:all"
+        c.cache_delete(redis_key)
+        redis_key = f"client:{client['clientNbr']}"
+        c.cache_delete(redis_key)
+        redis_key = f"clients:{client['name']}:{client['lastName']}"
+        c.cache_delete(redis_key)
         return newClient
 
     except ValidationError as e:
@@ -56,13 +61,16 @@ def _(clientNbr: int):
         redis_key = f"client:{clientNbr}"
         cached_client = c.cache_get(redis_key)
         if cached_client:
+            cached_client.pop('billNbrs', None)
             return cached_client
 
         query = {"clientNbr": clientNbr}
         client = CLIENTS.find_one(query)
 
-        if client:#caching
+        #load query to cache
+        if client:                          
             c.cache_set(redis_key, client)
+            client.pop('billNbrs', None) 
             
         return client
     except Exception as e:
@@ -86,13 +94,18 @@ def _(name: str, lastName: str):
         redis_key = f"clients:{name}:{lastName}"
         cached_clients = c.cache_get(redis_key)
         if cached_clients:
+            for client in cached_clients:
+                client.pop('billNbrs', None)
             return cached_clients
 
         query = {"name": name, "lastName": lastName}
         clients_list = list(CLIENTS.find(query))
 
-        if clients_list:#caching
+        #load query to cache
+        if clients_list:                            
             c.cache_set(redis_key, clients_list)
+            for client in clients_list:
+                client.pop('billNbrs', None)
 
         return clients_list
     except Exception as e:
@@ -103,7 +116,6 @@ def _(name: str, lastName: str):
 def getAllClients():
     """
     Searches for all the clients in database.
-    Caches query afterwards.
 
     Returns:
         client list if existent. None otherwise.
@@ -112,16 +124,21 @@ def getAllClients():
         redis_key = f"clients:all"
         cached_clients = c.cache_get(redis_key)
         if cached_clients:
+            for client in cached_clients:
+                client.pop('billNbrs', None)
             return cached_clients
 
         clients = CLIENTS.find()
 
         clients_list = list(clients)
 
-        if clients_list:  #caching
-            redis_key = f"clients:all"#TODO magic query string!
+        #load query to cache
+        if clients_list:  
+            redis_key = f"clients:all"
             c.cache_set(redis_key, clients_list)
-        
+            for client in clients_list:
+                client.pop('billNbrs', None)
+
         return clients_list
     except Exception as e:
         print(f"Error finding all clients: {e}")
@@ -151,16 +168,18 @@ def getAllPhones():
                 "$unwind": "$phones"
             },
             {
-                "$group": {
-                    "_id": {"clientNbr": "$clientNbr", "phone": "$phones.phone"},
-                    "clientNbr": {"$first": "$clientNbr"},
-                    "name": {"$first": "$name"},
-                    "lastName": {"$first": "$lastName"},
-                    "address": {"$first": "$address"},
-                    "active": {"$first": "$active"},
-                    "areaCode": {"$first": "$areaCode"},
-                    "phoneNbr": {"$first": "$phoneNbr"},
-                    "phoneType": {"$first": "$phoneType"}
+                "$project": {
+                    "_id": 1,  
+                    "clientNbr": 1,  
+                    "name": 1, 
+                    "lastName": 1, 
+                    "address": 1, 
+                    "active": 1, 
+                    "phone": { 
+                        "areaCode": "$phones.areaCode",
+                        "phoneNbr": "$phones.phoneNbr",
+                        "phoneType": "$phones.phoneType"
+                    }
                 }
             }
         ]
@@ -169,13 +188,63 @@ def getAllPhones():
 
         clients_list = list(clients_with_phones)
 
-        if clients_list:  #caching
-            redis_key = f"phones:all"#TODO magic query string!
+        #load query to cache
+        if clients_list: 
+            redis_key = f"phones:all"
             c.cache_set(redis_key, clients_list)
         
         return clients_list
     except Exception as e:
         print(f"Error finding all clients: {e}")
+        return None
+
+def getClientsWithBillAmount():
+    try:
+        all_clients =  getAllClients()
+        if all_clients:
+            all_clients_with_bills = []
+            for client in all_clients_with_bills:
+                if 'billNbrs' in client:
+                    client['billAmount'] = len(client['billNbrs'])
+                else:
+                    client['billAmount'] = 0
+                client.pop('billNbrs', None)
+            return all_clients_with_bills
+        
+        else:
+            return None
+    except Exception as e:
+        print(f"Error finding all clients with bill amount: {e}")
+        return None
+
+def getClientsWithBills():
+    try:
+        all_clients =  getAllClients()
+        if all_clients:
+            all_clients_with_bills = [client for client in all_clients_with_bills if 'billNbrs' in client and client['billNbrs']]
+            for client in all_clients_with_bills:
+                client.pop('billNbrs', None)
+            return all_clients_with_bills
+        
+        else:
+            return None
+    except Exception as e:
+        print(f"Error finding all clients with bills: {e}")
+        return None
+
+def getClientsWithNoBills():
+    try:
+        all_clients =  getAllClients()
+        if all_clients:
+            all_clients_without_bills = [client for client in all_clients_without_bills if 'billNbrs' not in client or not client['billNbrs']]
+            for client in all_clients_without_bills:
+                client.pop('billNbrs', None)
+            return all_clients_without_bills
+        
+        else:
+            return None
+    except Exception as e:
+        print(f"Error finding all clients without bills: {e}")
         return None
     
 #============ Modify ===========>
@@ -198,12 +267,16 @@ def modifyClient(client):
         result = CLIENTS.update_one(filter, operation)
         if result.modified_count <=0: raise Exception("No clients modified")
         
-        #TODO invalidate redis_cache here!!!!!!!!!!!!
-        if result:    #caching
+        if result:    #update cache
             redis_key = f"client:{client['clientNbr']}"
             c.cache_set(redis_key, result)
-            redis_key = f"client:{client['name']}:{client['lastName']}"
+            redis_key = f"clients:{client['name']}:{client['lastName']}"
             c.cache_set(redis_key, result)
+            redis_key = f"clients:all"
+            c.cache_del(redis_key)
+            redis_key = f"phones:all"
+            c.cache_del(redis_key)
+            #TODO habria q borrar las bills relacionadass tmb?
         return True
 
     except Exception as e:
@@ -219,16 +292,18 @@ def deleteClient(clientNbr: int):
             print(f"No client with clientNbr {clientNbr}.")
             return True
 
-        CLIENTS.delete_one(query)#TODO habria q borrar las bills relacionadass tmb?
-        #TODO ver tema cache que querys corresponde borrar de redis aca, por ahora solo se que esta si
+        CLIENTS.delete_one(query)
+        #update cache
+        if client['phones'] != []:
+            redis_key = f"phones:all"
+            c.cache_delete(redis_key)
         redis_key = f"clients:all"
-        c.cache_delete(redis_key)
-        redis_key = f"phones:all"#TODO un if para no borrar si no tenia phones
         c.cache_delete(redis_key)
         redis_key = f"client:{clientNbr}"
         c.cache_delete(redis_key)
         redis_key = f"clients:{client['name']}:{client['lastName']}"
         c.cache_delete(redis_key)
+        #TODO habria q borrar las bills relacionadass tmb?
 
         return True
 

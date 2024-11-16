@@ -17,8 +17,11 @@ def insertProduct(product):
     try:
         result = PRODUCTS.insert_one(product)
         newProduct = PRODUCTS.find_one({"_id": result.inserted_id})
-        redis_key = f"product:{newProduct['codProduct']}"     #load to cache
-        c.cache_set(redis_key, newProduct)
+        #update cache
+        redis_key = f"product:{product['codProduct']}"     
+        c.cache_set(redis_key, product)
+        redis_key = f"products:all"
+        c.cache_del(redis_key)
         return newProduct
     except ValidationError as e:
         print(f"Data validation error: {e}")
@@ -48,9 +51,10 @@ def getProduct(codProd: int):
         query = {"codProduct": codProd}
         product = PRODUCTS.find_one(query)
 
-        if product:
-            product.pop('billNbrs', None)    
+        #load query to cache
+        if product:   
             c.cache_set(redis_key, product)
+            product.pop('billNbrs', None) 
             
         return product
     except Exception as e:
@@ -64,14 +68,25 @@ def getAllProducts():
         product list if existent. None otherwise.
     """
     try:
-        redis_key = f"product:*"#TODO si esto funca ayuda a no tener que borrar el "all", solo modificar o borrar auqells q si
+        redis_key = f"products:all"
         cached_products = c.cache_multiple_get(redis_key)
-
         if cached_products:
             for product in cached_products:
                 product.pop('billNbrs', None)
+            return cached_products
 
-        return cached_products
+        products = PRODUCTS.find()
+
+        products_list = list(products)
+
+        #load query to cache
+        if products_list:
+            redis_key = f"products:all"
+            c.cache_set(redis_key, products_list)
+            for product in products_list:
+                product.pop('billNbrs', None)
+
+        return products_list
     except Exception as e:
         print(f"Error finding all products: {e}")
         return None
@@ -79,13 +94,11 @@ def getAllProducts():
 def getAllBoughtProducts():
     """
     Searches for all the products with a non-empty 'billNbr' list (products that have been bought).
-    Caches query afterwards.
     Returns:
         product list if existent. None otherwise.
     """
     try:
-        redis_key = f"product:*"#TODO si esto funca ayuda a no tener que borrar el "all", solo modificar o borrar auqells q si
-        all_products =  c.cache_multiple_get(redis_key)
+        all_products =  getAllProducts()
         if all_products:
             all_bought_products = [product for product in all_products if 'billNbrs' in product and product['billNbrs']]
             for product in all_bought_products:
@@ -118,8 +131,11 @@ def modifyProduct(product):
         if result.modified_count <=0: 
             raise Exception("No products modified")
         
-        redis_key = f"product:{product['codProduct']}"     #load to cache
+        #update cache
+        redis_key = f"product:{product['codProduct']}"     
         c.cache_set(redis_key, product)
+        redis_key = f"products:all"
+        c.cache_del(redis_key)
         return True
     except Exception as e:
         print(f"Error modifying product: {e}")

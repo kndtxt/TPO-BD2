@@ -87,8 +87,6 @@ def populateDb():
             }
     for product in products:
         PRODUCTS.insert_one(products[product])
-        redis_key = f"product:{products[product]['codProduct']}"     #load to cache
-        c.cache_set(redis_key, products[product])
         
 #==== Factura Data ====>
     bills = {}
