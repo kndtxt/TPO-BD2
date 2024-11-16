@@ -1,6 +1,6 @@
 #============ Imports ==================>
-from api.persistence.persistence import mydb, mongoClient, CLIENTS
-import api.persistence.cache as c
+from persistence.persistence import mydb, mongoClient, CLIENTS
+import persistence.cache as c
 from models import Client
 from pydantic import ValidationError
 from functools import singledispatch
