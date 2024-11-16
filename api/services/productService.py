@@ -7,7 +7,7 @@ from pymongo.errors import DuplicateKeyError
 from functools import singledispatch
 
 #============ Setters ==================>
-def insertProduct(product):
+def insertProduct(product: Product):
     """
     Inserts product into database.
 
@@ -18,8 +18,7 @@ def insertProduct(product):
         product if created. None otherwise.
     """ 
     try:
-        aux_prod = Product #validate by model
-        newProduct = PRODUCTS.insert_one(aux_prod.dict())
+        newProduct = PRODUCTS.insert_one(product.model_dump())
         return str(newProduct.inserted_id)
     except ValidationError as e:
         print(f"Data validation error: {e}")

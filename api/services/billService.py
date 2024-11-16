@@ -32,7 +32,7 @@ def insertBill(bill):
             if updateProduct.matched_count <= 0: raise Exception(f"Product for bill not found.")             
 
         aux_bill = Bill(**bill)#validate by model
-        newBill = BILLS.insert_one(aux_bill.dict())
+        newBill = BILLS.insert_one(aux_bill.model_dump())
         return newBill
     except ValidationError as e:
         print(f"Data validation error: {e}")

@@ -31,7 +31,7 @@ def insertClient(client):
             return None
 
         aux_client = Client(**client)#validate by model
-        newClient = CLIENTS.insert_one(aux_client.dict())
+        newClient = CLIENTS.insert_one(aux_client.model_dump())
         return newClient
 
     except ValidationError as e:
