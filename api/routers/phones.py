@@ -3,7 +3,7 @@ from services.clientService import getAllPhones
 
 router = APIRouter(
   prefix='/phones',
-  tags=['phones']
+  tags=['Phones']
 )
 
 @router.get('/')

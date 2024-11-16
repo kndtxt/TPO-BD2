@@ -4,7 +4,7 @@ from models import *
 
 router = APIRouter(
   prefix='/bills',
-  tags=['bills']
+  tags=['Bills']
 )
 
 @router.post('/')

@@ -4,7 +4,7 @@ from models import Product
 
 router = APIRouter(
   prefix='/products',
-  tags=['products']
+  tags=['Products']
 )
 
 @router.get('/{product_id}')

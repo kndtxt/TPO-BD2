@@ -5,7 +5,7 @@ from api.models import *
 
 router = APIRouter(
   prefix='/clients',
-  tags=['clients'] 
+  tags=['Clients'] 
 )
 
 
