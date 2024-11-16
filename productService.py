@@ -91,11 +91,11 @@ def getAllBoughtProducts():
 #============ Modify ===========>
 def modifyProduct(product):
     """
-    Modifies a persisted product.
+    Modifies a persisted product. Must have the corresponding codProduct in it.
     Args:
         product(Product): the product to be modified
     Returns:
-        True if modified. False otherwise
+        True if modified. False otherwise.
     """
     try:
         filter = {"codProduct": product['codProduct']}
@@ -108,7 +108,8 @@ def modifyProduct(product):
         if result.modified_count <=0: 
             raise Exception("No products modified")
         
-        #TODO modify cache here!!!!!!!!!!!
+        redis_key = f"product:{product['codProduct']}"     #load to cache
+        c.cache_set(redis_key, product)
         return True
     except Exception as e:
         print(f"Error modifying product: {e}")
