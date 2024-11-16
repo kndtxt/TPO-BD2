@@ -1,6 +1,6 @@
 #============ Imports ==================>
-from api.persistence.persistence import mydb, PRODUCTS
-import api.persistence.cache as c
+from persistence.persistence import mydb, PRODUCTS
+import persistence.cache as c
 from models import Product
 from pydantic import ValidationError
 from pymongo.errors import DuplicateKeyError

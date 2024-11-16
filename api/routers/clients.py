@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query
 from typing import Annotated
 from services.clientService import getAllClients, getClient, deleteClient
-from api.models import *
+from models import *
 
 router = APIRouter(
   prefix='/clients',
