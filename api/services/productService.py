@@ -1,16 +1,13 @@
 #============ Imports ==================>
-from persistence import mydb
-import cache as c
-from models import Producto
+from api.persistence.persistence import mydb, PRODUCTS
+import api.persistence.cache as c
+from models import Product
 from pydantic import ValidationError
+from pymongo.errors import DuplicateKeyError
 from functools import singledispatch
 
-#============ Dbs Connection ===========>
-PRODUCTS = mydb["clients"]
-PRODUCTS.create_index([('codProduct', 1)], unique=True)
-
 #============ Setters ==================>
-def insertProduct(product):
+def insertProduct(product: Product):
     """
     Inserts product into database.
 
@@ -21,19 +18,13 @@ def insertProduct(product):
         product if created. None otherwise.
     """ 
     try:
-        oldCodProduct = product['codProduct']
-        codProduct = int(oldCodProduct) if isinstance(oldCodProduct, str) else oldCodProduct
-        query = {"codProduct": codProduct}
-        aux_prod = PRODUCTS.find_one(query)
-        if aux_prod is not None:
-            print(f"Product for codProduct: {codProduct} already exists!")
-            return None
-
-        aux_prod = Producto(**product)#validate by model
-        newProduct = PRODUCTS.insert_one(aux_prod.dict())
-        return newProduct
+        newProduct = PRODUCTS.insert_one(product.model_dump())
+        return str(newProduct.inserted_id)
     except ValidationError as e:
         print(f"Data validation error: {e}")
+    except DuplicateKeyError as e:
+        print(f"Product for codProduct: {product['codProduct']} already exists!")
+        return None
     except Exception as e:
         print(e)
         return None
@@ -69,6 +60,29 @@ def getProduct(codProd: int):
             
 
 #============ Modify ===========>
+def modifyProduct(product):
+    """
+    Modifies a persisted product.
+    Args:
+        product(Product): the product to be modified
+    Returns:
+        True if modified. False otherwise
+    """
+    try:
+        filter = {"codProduct": product['codProduct']}
+        fields = {}
+        for key, value in product.items():
+            if key != "_id" and key != "productNbr":
+                fields[key] = value
+        operation = {"$set": fields}
+        result = PRODUCTS.update_one(filter, operation)
+        if result.modified_count <=0: 
+            raise Exception("No products modified")
+            return False
+        
+        #TODO modify cache here!!!!!!!!!!!
+        return True
+    except Exception as e:
+        print(f"Error modifying product: {e}")
+        return False
 
-
-#============ Delete ===========>
