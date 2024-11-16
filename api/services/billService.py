@@ -1,12 +1,13 @@
 #============ Imports ==================>
-from api.persistence.persistence import mydb, mongoClient, session, BILLS, CLIENTS, PRODUCTS
+from persistence.persistence import mydb, mongoClient, session, BILLS, CLIENTS, PRODUCTS
 from .productService import getProduct
-import api.persistence.cache as c
+import persistence.cache as c
 from models import Bill
 from pydantic import ValidationError
 from functools import singledispatch
 
 #session to allow transactional behaviour
+
 
 #============ Setters ==================>
 
@@ -49,31 +50,57 @@ def insertNewBill(bill):
         Bill if inserted. None otherwise.
     """ 
     try:
-        session.start_transaction()
-        insertBill(bill)
-        for detail in bill["details"]:
-            productNbr = detail["productNbr"]
-            product = getProduct(productNbr)
-            
-            if product is None:
-                session.abort_transaction()
-                raise Exception(f"Product to bill not found")
-            
-            newStock = product.stock - (detail.amount)
-            if newStock<0: 
-                session.abort_transaction()
-                raise Exception(f"Requested more items than available stock")
-            
-            productQuery = {"prodctNbr": productNbr}
-            operation = {"$set":{"stock":newStock}}
-            result = PRODUCTS.update_one(productQuery, operation)
-            if result.matched_count <= 0:
-                session.abort_transaction()
-                raise Exception(f"Billing error")
-            
+        with session.start_transaction():
+            insertBill(bill)
+            for detail in bill["details"]:
+                productNbr = detail["productNbr"]
+                product = getProduct(productNbr)
+                
+                if product is None:
+                    session.abort_transaction()
+                    raise Exception(f"Product to bill not found")
+                
+                newStock = product.stock - (detail.amount)
+                if newStock<0: 
+                    session.abort_transaction()
+                    raise Exception(f"Requested more items than available stock")
+                
+                productQuery = {"prodctNbr": productNbr}
+                operation = {"$set":{"stock":newStock}}
+                result = PRODUCTS.update_one(productQuery, operation)
+                if result.matched_count <= 0:
+                    session.abort_transaction()
+                    raise Exception(f"Billing error")
         session.commit_transaction()
     except Exception as e:
         print("Billing error: {e}")
-        return None
+    finally:
+        session.end_session()
 
 #============ Getters ==================>
+
+
+#============ Views ====================>
+
+def createBillDataView():
+    """
+    Creates a view that groups bills by date.
+    """
+    try:
+        pipeline = [{"$match":{}},
+                    {"$project": {
+                        "billNbr": 1,
+                        "date": 1,
+                        "total": 1,
+                        "tax": 1,
+                        "taxxedTotal": 1,
+                        "clientNbr": 1,
+                        "details": 1
+                    }}]
+
+        mydb.create_collection("billDataByDate", viewOn="bills", pipeline=pipeline)
+        view = mydb["billDataByDate"].find().sort("date", 1)
+        return view
+    except Exception as e:
+        print(f"Cannot create view: {e}")
+

@@ -86,3 +86,27 @@ def modifyProduct(product):
         print(f"Error modifying product: {e}")
         return False
 
+
+# ============ Views ====================>
+
+def createProductsNotBilledView():
+    """
+    Creates a view of products that were not billed yet. 
+    """
+    try:
+        pipeline = [{"$match":{"billNbrs":{"$size":0}}},    #products that were not billed yet
+                    {"$project": {
+                        "codProduct": 1,
+                        "brand": 1,
+                        "name": 1,
+                        "description": 1,
+                        "price": 1,
+                        "stock": 1               
+                    }}]
+
+        mydb.create_collection("notBilledProducts", viewOn="products", pipeline=pipeline)
+        view = mydb["notBilledProducts"].find().sort("date", 1)
+        return view
+    except Exception as e:
+        print(f"Error creating view: {e}")
+        return None

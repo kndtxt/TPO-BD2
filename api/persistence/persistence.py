@@ -118,8 +118,15 @@ def populateDb():
                     "amount": float(row[3]),
                 })
     
-    for bill in bills:
-        BILLS.insert_one(bills[bill])
+    for billIndex in bills:
+        bill = bills[billIndex]
+        clientQuery = {"clientNbr": int(bill["clientNbr"])}
+        operation = {"$push": {"billNbrs": bill["billNbr"]}} 
+        updateClient = CLIENTS.update_one(clientQuery, operation)       #add reference to bill that client has purchased        
+        for detail in bill["details"]:
+            productQuery = {"codProduct": int(detail['codProduct'])}
+            updateProduct = PRODUCTS.update_one(productQuery, operation)    #add reference to bill where product was billed
+        BILLS.insert_one(bills[billIndex])
 
             
 
