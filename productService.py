@@ -14,9 +14,11 @@ def insertProduct(product):
     Returns:
         product if created. None otherwise.
     """ 
-    try:#TODO guardar en cache dp de mongo
-        #aux_prod = Product(**product)#validate by model
-        newProduct = PRODUCTS.insert_one(product)
+    try:
+        result = PRODUCTS.insert_one(product)
+        newProduct = PRODUCTS.find_one({"_id": result.inserted_id})
+        redis_key = f"product:{newProduct['codProduct']}"     #load to cache
+        c.cache_set(redis_key, newProduct)
         return newProduct
     except ValidationError as e:
         print(f"Data validation error: {e}")
@@ -77,7 +79,7 @@ def getAllBoughtProducts():
         redis_key = f"product:*"#TODO si esto funca ayuda a no tener que borrar el "all", solo modificar o borrar auqells q si
         all_products =  c.cache_multiple_get(redis_key)
         if all_products:
-            all_bought_products = [product for product in all_products if 'billNbr' in product and product['billNbr']]
+            all_bought_products = [product for product in all_products if 'billNbrs' in product and product['billNbrs']]
             return all_bought_products
         
         else:

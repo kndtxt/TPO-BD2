@@ -10,8 +10,17 @@ def main():
     print(ps.getProduct(18))
     print(ps.getProduct(19))
     print(ps.getProduct(20))
-    print("all")
-    print(ps.getAllProducts())
+    print(ps.insertProduct({
+                "codProduct": 105,
+                "brand": "strix",
+                "name" : "satr",
+                "description" : "heyoo",
+                "price" : 2.2,
+                "stock" : 2,
+                "billNbrs" : [1]
+    }))
+    print("allbought")
+    print(ps.getAllBoughtProducts())
 
     #p.session.end_session()   #end session and abort all ongoing transactions
 
