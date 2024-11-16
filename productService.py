@@ -1,9 +1,7 @@
 #============ Imports ==================>
-from persistence import mydb, PRODUCTS
+from persistence import PRODUCTS
 import cache as c
-import models
 from pydantic import ValidationError
-from functools import singledispatch
 
 #============ Setters ==================>
 def insertProduct(product):
@@ -16,15 +14,9 @@ def insertProduct(product):
     Returns:
         product if created. None otherwise.
     """ 
-    try:
-        query = {"codProduct": product['codProduct']}
-        aux_prod = PRODUCTS.find_one(query)
-        if aux_prod is not None:
-            print(f"Product for codProduct: {product['codProduct']} already exists!")
-            return None
-
-        aux_prod = Product(**product)#validate by model
-        newProduct = PRODUCTS.insert_one(aux_prod.dict())
+    try:#TODO guardar en cache dp de mongo
+        #aux_prod = Product(**product)#validate by model
+        newProduct = PRODUCTS.insert_one(product)
         return newProduct
     except ValidationError as e:
         print(f"Data validation error: {e}")
@@ -61,7 +53,39 @@ def getProduct(codProd: int):
         print(f"Error finding product: {e}")
         return None
             
-
+def getAllProducts():
+    """
+    Searches for all the products in database.
+    Returns:
+        product list if existent. None otherwise.
+    """
+    try:
+        redis_key = f"product:*"#TODO si esto funca ayuda a no tener que borrar el "all", solo modificar o borrar auqells q si
+        return c.cache_multiple_get(redis_key)
+    except Exception as e:
+        print(f"Error finding all products: {e}")
+        return None
+    
+def getAllBoughtProducts():
+    """
+    Searches for all the products with a non-empty 'billNbr' list (products that have been bought).
+    Caches query afterwards.
+    Returns:
+        product list if existent. None otherwise.
+    """
+    try:
+        redis_key = f"product:*"#TODO si esto funca ayuda a no tener que borrar el "all", solo modificar o borrar auqells q si
+        all_products =  c.cache_multiple_get(redis_key)
+        if all_products:
+            all_bought_products = [product for product in all_products if 'billNbr' in product and product['billNbr']]
+            return all_bought_products
+        
+        else:
+            return None
+    except Exception as e:
+        print(f"Error finding all products: {e}")
+        return None
+    
 #============ Modify ===========>
 def modifyProduct(product):
     """
@@ -81,7 +105,6 @@ def modifyProduct(product):
         result = PRODUCTS.update_one(filter, operation)
         if result.modified_count <=0: 
             raise Exception("No products modified")
-            return False
         
         #TODO modify cache here!!!!!!!!!!!
         return True

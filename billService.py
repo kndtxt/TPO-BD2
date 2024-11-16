@@ -1,10 +1,8 @@
 #============ Imports ==================>
-from persistence import mydb, mongoClient, session, BILLS, CLIENTS, PRODUCTS
+from persistence import session, BILLS, CLIENTS, PRODUCTS
 from productService import getProduct
 import cache as c
-import models
 from pydantic import ValidationError
-from functools import singledispatch
 
 #session to allow transactional behaviour
 
@@ -31,8 +29,8 @@ def insertBill(bill):
             updateProduct = PRODUCTS.update_one(productQuery, operation)    #add reference to bill where product was billed
             if updateProduct.matched_count <= 0: raise Exception(f"Product for bill not found.")             
 
-        aux_bill = Bill(**bill)#validate by model
-        newBill = BILLS.insert_one(aux_bill.dict())
+        #aux_bill = Bill(**bill)#validate by model
+        newBill = BILLS.insert_one(bill)
         return newBill
     except ValidationError as e:
         print(f"Data validation error: {e}")

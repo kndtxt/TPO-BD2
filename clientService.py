@@ -1,8 +1,6 @@
 #============ Imports ==================>
-from persistence import mydb, mongoClient, CLIENTS
-from productService import getProduct
+from persistence import CLIENTS
 import cache as c
-import models
 from pydantic import ValidationError
 from functools import singledispatch
 from pymongo.errors import DuplicateKeyError
@@ -23,16 +21,9 @@ def insertClient(client):
         cached_clients = c.cache_get(redis_key)
         if cached_clients:
             c.cache_del(redis_key)
-        
-        nroCliente = int(client['clientNbr']) if isinstance(client['clientNbr'], str) else client['clientNbr']
-        query = {"clientNbr": nroCliente}
-        aux_client = CLIENTS.find_one(query)
-        if aux_client is not None:
-            print(f"Client for nroCliente: {nroCliente} already exists!")
-            return None
 
-        aux_client = Client(**client)#validate by model
-        newClient = CLIENTS.insert_one(aux_client.dict())
+        #aux_client = Client(**client)#validate by model
+        newClient = CLIENTS.insert_one(client)
         return newClient
 
     except ValidationError as e:
@@ -127,7 +118,7 @@ def getAllClients():
 
         clients_list = list(clients)
 
-        if clients_list:  #caching#TODO capaz si se podria cachear solo la query getall, pero habria que chequear en toda fncion que modifique toda la db
+        if clients_list:  #caching
             redis_key = f"clients:all"#TODO magic query string!
             c.cache_set(redis_key, clients_list)
         
@@ -166,7 +157,10 @@ def getAllPhones():
                     "name": {"$first": "$name"},
                     "lastName": {"$first": "$lastName"},
                     "address": {"$first": "$address"},
-                    "active": {"$first": "$active"}
+                    "active": {"$first": "$active"},
+                    "areaCode": {"$first": "$areaCode"},
+                    "phoneNbr": {"$first": "$phoneNbr"},
+                    "phoneType": {"$first": "$phoneType"}
                 }
             }
         ]
@@ -175,7 +169,7 @@ def getAllPhones():
 
         clients_list = list(clients_with_phones)
 
-        if clients_list:  #caching#TODO capaz si se podria cachear solo la query getall, pero habria que chequear en toda fncion que modifique toda la db
+        if clients_list:  #caching
             redis_key = f"phones:all"#TODO magic query string!
             c.cache_set(redis_key, clients_list)
         
@@ -205,6 +199,11 @@ def modifyClient(client):
         if result.modified_count <=0: raise Exception("No clients modified")
         
         #TODO invalidate redis_cache here!!!!!!!!!!!!
+        if result:    #caching
+            redis_key = f"client:{client['clientNbr']}"
+            c.cache_set(redis_key, result)
+            redis_key = f"client:{client['name']}:{client['lastName']}"
+            c.cache_set(redis_key, result)
         return True
 
     except Exception as e:
@@ -223,6 +222,8 @@ def deleteClient(clientNbr: int):
         CLIENTS.delete_one(query)#TODO habria q borrar las bills relacionadass tmb?
         #TODO ver tema cache que querys corresponde borrar de redis aca, por ahora solo se que esta si
         redis_key = f"clients:all"
+        c.cache_delete(redis_key)
+        redis_key = f"phones:all"#TODO un if para no borrar si no tenia phones
         c.cache_delete(redis_key)
         redis_key = f"client:{clientNbr}"
         c.cache_delete(redis_key)
