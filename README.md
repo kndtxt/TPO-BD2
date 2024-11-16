@@ -1,2 +1,6 @@
 # TPO-BD2
-pyhton3 -m pip install redis pymongo pydantic json fastapi
+
+To install required libraries
+```
+python3 -m pip install -r requirements.txt
+```
