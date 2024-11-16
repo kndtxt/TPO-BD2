@@ -1,12 +1,13 @@
 #============ Imports ==================>
-from persistence import mydb, PRODUCTS
-import cache as c
-import models
+from api.persistence.persistence import mydb, PRODUCTS
+import api.persistence.cache as c
+from models import Product
 from pydantic import ValidationError
+from pymongo.errors import DuplicateKeyError
 from functools import singledispatch
 
 #============ Setters ==================>
-def insertProduct(product):
+def insertProduct(product: Product):
     """
     Inserts product into database.
 
@@ -17,17 +18,13 @@ def insertProduct(product):
         product if created. None otherwise.
     """ 
     try:
-        query = {"codProduct": product['codProduct']}
-        aux_prod = PRODUCTS.find_one(query)
-        if aux_prod is not None:
-            print(f"Product for codProduct: {product['codProduct']} already exists!")
-            return None
-
-        aux_prod = Product(**product)#validate by model
-        newProduct = PRODUCTS.insert_one(aux_prod.dict())
-        return newProduct
+        newProduct = PRODUCTS.insert_one(product.model_dump())
+        return str(newProduct.inserted_id)
     except ValidationError as e:
         print(f"Data validation error: {e}")
+    except DuplicateKeyError as e:
+        print(f"Product for codProduct: {product['codProduct']} already exists!")
+        return None
     except Exception as e:
         print(e)
         return None

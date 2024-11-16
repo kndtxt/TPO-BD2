@@ -1,8 +1,7 @@
 #============ Imports ==================>
-from persistence import mydb, mongoClient, CLIENTS
-from productService import getProduct
-import cache as c
-import models
+from api.persistence.persistence import mydb, mongoClient, CLIENTS
+import api.persistence.cache as c
+from models import Client
 from pydantic import ValidationError
 from functools import singledispatch
 from pymongo.errors import DuplicateKeyError
@@ -32,7 +31,7 @@ def insertClient(client):
             return None
 
         aux_client = Client(**client)#validate by model
-        newClient = CLIENTS.insert_one(aux_client.dict())
+        newClient = CLIENTS.insert_one(aux_client.model_dump())
         return newClient
 
     except ValidationError as e:
@@ -108,8 +107,6 @@ def _(name: str, lastName: str):
         print(f"Error finding client: {e}")
         return None
     
-def getClientSpent(clientNbr: int):
-    return None#TODO doit
 
 def getAllClients():
     """
@@ -137,15 +134,6 @@ def getAllClients():
     except Exception as e:
         print(f"Error finding all clients: {e}")
         return None
-
-def getAllClientsBillAmount():
-    return None#TODO doit
-
-def getClientsWithBills():
-    return None#TODO doit
-
-def getClientsWithNoBills():
-    return None#TODO doit
 
 def getAllPhones():
     """
