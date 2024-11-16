@@ -16,6 +16,10 @@ def main():
                 "stock" : 2,
                 "billNbrs" : [1]
     }))
+    print("post")
+    print(ps.getProduct(105))
+    print("all")
+    print(ps.getAllProducts())
     print("allbought")
     print(ps.getAllBoughtProducts())
     print(ps.modifyProduct({

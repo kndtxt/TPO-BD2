@@ -42,12 +42,14 @@ def getProduct(codProd: int):
         redis_key = f"product:{codProd}"     #first search in cached data
         cached_prod = c.cache_get(redis_key)
         if cached_prod:
+            cached_prod.pop('billNbrs', None)
             return cached_prod
 
         query = {"codProduct": codProd}
         product = PRODUCTS.find_one(query)
 
-        if product:        
+        if product:
+            product.pop('billNbrs', None)    
             c.cache_set(redis_key, product)
             
         return product
@@ -63,7 +65,13 @@ def getAllProducts():
     """
     try:
         redis_key = f"product:*"#TODO si esto funca ayuda a no tener que borrar el "all", solo modificar o borrar auqells q si
-        return c.cache_multiple_get(redis_key)
+        cached_products = c.cache_multiple_get(redis_key)
+
+        if cached_products:
+            for product in cached_products:
+                product.pop('billNbrs', None)
+
+        return cached_products
     except Exception as e:
         print(f"Error finding all products: {e}")
         return None
@@ -80,6 +88,8 @@ def getAllBoughtProducts():
         all_products =  c.cache_multiple_get(redis_key)
         if all_products:
             all_bought_products = [product for product in all_products if 'billNbrs' in product and product['billNbrs']]
+            for product in all_bought_products:
+                product.pop('billNbrs', None)
             return all_bought_products
         
         else:
