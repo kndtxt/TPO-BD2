@@ -5,6 +5,7 @@ st.title("Bills")
 option = st.selectbox(
     "Test the functionality of the Project",
     (
+        "Name and Last Name <> Amount of Bills",
         "Bills by Name and Last Name",
         "Bills with products from a particular brand",
         "Name and Last Name <> what was spent",
@@ -14,7 +15,11 @@ option = st.selectbox(
     ),
 )
 
-if option == "Bills by Name and Last Name":
+if option == "Name and Last Name <> Amount of Bills":
+    # TODO: Endpoint that returns Name and Last Name <> Amount of Bills
+    st.write("Name and Last Name <> Amount of Bills")
+
+elif option == "Bills by Name and Last Name":
     name = st.text_input("Name", "Kai")
     last_name = st.text_input("Last Name", "Bullock")
     btn = st.button("Search")
