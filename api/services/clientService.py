@@ -2,10 +2,11 @@
 from persistence.persistence import CLIENTS, BILLS
 import persistence.cache as c
 from models import Client
-from pydantic import ValidationError
 from functools import singledispatch
 from pymongo.errors import DuplicateKeyError
 from utils.json_serialize_utils import clean_data
+from utils.api_response import ResponseStatus
+from fastapi import status
 
 #============ Setters ==================>
 def insertClient(client: Client):
@@ -35,15 +36,11 @@ def insertClient(client: Client):
 
         return newClient
 
-    except ValidationError as e:
-        print(f'Data validation error: {e}')
     except DuplicateKeyError as e:
         clientNbr = client['clientNbr']
-        print(f'Client for nroCliente: {clientNbr} already exists!')
-        return None
+        return ResponseStatus(status.HTTP_422_UNPROCESSABLE_ENTITY, f'Client for nroCliente: {clientNbr} already exists!')
     except Exception as e:
-        print(e)
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
 
 #============ Getters ===========>
 @singledispatch
@@ -78,8 +75,8 @@ def _(clientNbr: int):
         
         return client
     except Exception as e:
-        print(f'Error finding client: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
+
 
 @getClient.register
 def _(name: str, lastName: str):
@@ -109,8 +106,7 @@ def _(name: str, lastName: str):
 
         return clients_list
     except Exception as e:
-        print(f'Error finding client: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
     
 
 def getAllClients():
@@ -141,8 +137,7 @@ def getAllClients():
 
         return clients
     except Exception as e:
-        print(f'Error finding all clients: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
 
 
 
@@ -168,8 +163,8 @@ def getAllClientsWithBillNbrs():
         
         return clients
     except Exception as e:
-        print(f'Error finding all clients: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
+
 
 def getAllPhones(): # TODO: maybe reorder so the first field is phone?
     '''
@@ -219,8 +214,8 @@ def getAllPhones(): # TODO: maybe reorder so the first field is phone?
 
         return clients_with_phones
     except Exception as e:
-        print(f'Error finding all phones: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
+
     
 def getClientsWithBillAmount():
     try:
@@ -236,8 +231,8 @@ def getClientsWithBillAmount():
         else:
             return None
     except Exception as e:
-        print(f'Error finding all clients with bill amount: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
+
 
 def getClientsWithBills(): #TODO: maybe simplify into one mongo + redis cache instead of using all
     try:
@@ -250,8 +245,8 @@ def getClientsWithBills(): #TODO: maybe simplify into one mongo + redis cache in
         else:
             return None
     except Exception as e:
-        print(f'Error finding all clients with bills: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
+
 
 def getClientsWithNoBills(): #TODO: maybe simplify into one mongo + redis cache instead of using all
     try:
@@ -264,8 +259,8 @@ def getClientsWithNoBills(): #TODO: maybe simplify into one mongo + redis cache 
         else:
             return None
     except Exception as e:
-        print(f'Error finding all clients without bills: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
+
     
 def getClientTotalWithTaxes():
     '''
@@ -314,8 +309,8 @@ def getClientTotalWithTaxes():
         return bills_by_clientNbr
     
     except Exception as e:
-        print(f'Error finding bills bought by that client: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
+
     
 #============ Modify ===========>
 
@@ -354,8 +349,8 @@ def modifyClient(client: Client):
         return True
     
     except Exception as e:
-        print(f'Error finding all clients: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
+
 
 #============ Delete ===========>
 def deleteClient(clientNbr: int):
@@ -391,5 +386,4 @@ def deleteClient(clientNbr: int):
         return True
 
     except Exception as e:
-        print(f'Error deleting client: {e}')
-        return False
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')

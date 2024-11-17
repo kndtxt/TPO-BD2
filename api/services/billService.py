@@ -1,16 +1,13 @@
 #============ Imports ==================>
-from persistence.persistence import mydb, mongoClient, session, BILLS, CLIENTS, PRODUCTS
+from persistence.persistence import mydb, mongoClient, BILLS, CLIENTS, PRODUCTS
 from .productService import getProduct, getProductForBrands
 from .clientService import getClient
 import persistence.cache as c
 from models import Bill
-from pydantic import ValidationError
-from bson import json_util
 from utils.json_serialize_utils import clean_data
-import json
-from pydantic import ValidationError
-from functools import singledispatch
 from datetime import datetime
+from utils.api_response import ResponseStatus
+from fastapi import status
 
 #session to allow transactional behaviour
 
@@ -29,21 +26,19 @@ def insertBill(bill: Bill):
         operation = {'$push': {'billNbrs': bill_data['billNbr']}}
         updateClient = CLIENTS.update_one(clientQuery, operation)  # add reference to bill that client has purchased
         if updateClient.matched_count <= 0:
-            raise Exception('Client for bill not found.')
+            return ResponseStatus(status.HTTP_404_NOT_FOUND, 'Client for bill not found.')
         
         for detail in bill_data['details']:
             codProduct = int(detail['codProduct'])
             productQuery = {'codProduct': codProduct}
             updateProduct = PRODUCTS.update_one(productQuery, operation)  # add reference to bill where product was billed
             if updateProduct.matched_count <= 0:
-                raise Exception('Product for bill not found.')
+                return ResponseStatus(status.HTTP_404_NOT_FOUND, 'Product for bill not found.')
 
         newBill = BILLS.insert_one(bill_data)
         return newBill
-    except ValidationError as e:
-        print(f'Data validation error: {e}')
     except Exception as e:
-        print(f'Cannot insert bill: {e}')
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
 
 def insertNewBill(bill: Bill):
     '''
@@ -64,28 +59,24 @@ def insertNewBill(bill: Bill):
                     
                     if product is None:
                         session.abort_transaction()
-                        raise Exception(f'Product to bill not found')
+                        return ResponseStatus(status.HTTP_404_NOT_FOUND, 'Product for bill not found.')
                     
                     newStock = product['stock'] - detail['amount']
                     if newStock < 0:
                         session.abort_transaction()
-                        raise Exception(f'Requested more items than available stock')
+                        return ResponseStatus(status.HTTP_400_BAD_REQUEST, 'Requested more items than available stock')
                     
                     productQuery = {'codProduct': productNbr}
                     operation = {'$set': {'stock': newStock}}
                     result = PRODUCTS.update_one(productQuery, operation)
                     if result.matched_count <= 0:
                         session.abort_transaction()
-                        raise Exception(f'Billing error')
+                        return ResponseStatus(status.HTTP_412_PRECONDITION_FAILED, 'Billing error')
                 session.commit_transaction()
     except Exception as e:
-        print(f'Billing error: {e}')
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
     finally:
         session.end_session()
-
-
-
-
 
 #============ Getters ==================>
 
@@ -110,8 +101,7 @@ def getAllBills():
 
         return bills
     except Exception as e:
-        print(f'Error finding all the bills: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Error finding all the bills: {e}')
     
 def getBillsByBrand(brand: str):
     '''
@@ -138,8 +128,8 @@ def getBillsByBrand(brand: str):
             c.cache_set(redis_key, bills)
         return bills
     except Exception as e:
-        print(f'Error finding bills: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Error finding all the bills: {e}')
+
     
 def getBills(name: str, surname: str):
     '''
@@ -172,8 +162,8 @@ def getBills(name: str, surname: str):
 
         return bill_list
     except Exception as e:
-        print(f'Error finding bills bought by that client: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Error finding all the bills: {e}')
+
 
 
 #============ Views ====================>
@@ -205,11 +195,14 @@ def createBillDataView():
                 doc['date'] = doc['date'].strftime('%Y-%m-%d')      #convert datetime to string again
         return view
     except Exception as e:
-        print(f'Cannot create view: {e}')
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Error finding all the bills: {e}')
 
 def dropBillDataView():
     '''
     Drops the view that groups bills by date.
     '''
-    mydb.drop_collection('billDateByDate')
+    try:
+        mydb.drop_collection('billDateByDate')
+    except Exception as e:
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Error finding all the bills: {e}')
     return True

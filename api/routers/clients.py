@@ -1,6 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, status, Response
 from services.clientService import *
-from utils.api_response import response
+from utils.api_response import response_wrapper
 from models import *
 
 router = APIRouter(
@@ -8,8 +8,9 @@ router = APIRouter(
   tags=['Clients'] 
 )
 
-@router.get('/')
+@router.get('/', status_code=status.HTTP_200_OK)
 async def get_client(
+  response: Response,
   name: str | None = None, 
   surname: str | None = None, 
   bills: str | None = None,
@@ -37,26 +38,39 @@ async def get_client(
       data = getAllClients()
   else:
     data = getAllClients()
-  return response(data)
+  return response_wrapper(data, response)
 
-@router.get('/{client_id}')
-async def get_client_by_id(client_id: int):
+@router.get('/{client_id}', status_code=status.HTTP_200_OK)
+async def get_client_by_id(
+  client_id: int,
+  response: Response
+):
   data = getClient(client_id)
-  return response(data)
+  return response_wrapper(data, response)
 
-@router.post('/')
-async def create_client(client: Client):
+@router.post('/', status_code=status.HTTP_201_CREATED)
+async def create_client(
+  client: Client,
+  response: Response
+):
   data = insertClient(client)
-  return response(data)
+  return response_wrapper(data, response)
 
-@router.patch('/{client_id}')
-async def modify_client(client_id: int, client: Client):
+@router.patch('/{client_id}', status_code=status.HTTP_200_OK)
+async def modify_client(
+  client_id: int, 
+  client: Client,
+  response: Response
+):
   client.clientNbr = client_id
   data = modifyClient(client)
-  return response(data)
+  return response_wrapper(data, response)
 
-@router.delete('/{client_id}')
-async def delete_client_by_id(client_id: int):
+@router.delete('/{client_id}', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_client_by_id(
+  client_id: int,
+  response: Response
+):
   data = deleteClient(client_id)
-  return response(data)
+  return response_wrapper(data, response)
 

@@ -2,11 +2,12 @@
 from persistence.persistence import mydb, PRODUCTS
 import persistence.cache as c
 from models import Product
-from pydantic import ValidationError
 from pymongo.errors import DuplicateKeyError
 from functools import singledispatch
 from utils.json_serialize_utils import clean_data
 import json
+from fastapi import status
+from utils.api_response import ResponseStatus
 
 #============ Setters ==================>
 def insertProduct(product: Product):
@@ -30,16 +31,12 @@ def insertProduct(product: Product):
         c.cache_del(redis_key)
 
         return {'_id': str(newProduct.inserted_id)}
-    except ValidationError as e:
-        print(f'Data validation error: {e}')
-        return None
     except DuplicateKeyError as e:
         codProduct = product['codProduct']
-        print(f'Product for codProduct: {codProduct} already exists!')
-        return None
+        return ResponseStatus(status.HTTP_422_UNPROCESSABLE_ENTITY, f'Product for codProduct: {codProduct} already exists.')
     except Exception as e:
-        print(e)
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
+
 
 #============ Getters ==================>
 def getProduct(codProd: int):
@@ -68,8 +65,8 @@ def getProduct(codProd: int):
             
         return product
     except Exception as e:
-        print(f'Error finding product: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
+
             
 def getProductForBrands(brand: str):
     '''
@@ -95,7 +92,7 @@ def getProductForBrands(brand: str):
             
         return products
     except Exception as e:
-        print(f'Error finding product: {e}')
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
     
 
 def getAllProducts():
@@ -124,8 +121,8 @@ def getAllProducts():
 
         return products
     except Exception as e:
-        print(f'Error finding all products: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
+
 
 def getAllProductsWithBillNbrs():
     '''
@@ -151,8 +148,8 @@ def getAllProductsWithBillNbrs():
 
         return products
     except Exception as e:
-        print(f'Error finding all products: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
+
     
 def getAllBoughtProducts():
     '''
@@ -170,8 +167,8 @@ def getAllBoughtProducts():
         else:
             return None
     except Exception as e:
-        print(f'Error finding all products: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
+
 
 #============ Modify ===========>
 def modifyProduct(product: Product):
@@ -203,8 +200,8 @@ def modifyProduct(product: Product):
 
         return True
     except Exception as e:
-        print(f'Error modifying product: {e}')
-        return False
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
+
 
 
 # ============ Views ====================>
@@ -244,8 +241,8 @@ def createProductsNotBilledView():
         view = mydb['notBilledProducts'].find()
         return view
     except Exception as e:
-        print(f'Error creating view: {e}')
-        return None
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
+
     
 def dropProductsNotBilledView():
     '''

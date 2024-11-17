@@ -1,20 +1,24 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, status, Response
 from services.productService import *
 from models import Product
-from utils.api_response import response
+from utils.api_response import response_wrapper
 
 router = APIRouter(
   prefix='/products',
   tags=['Products']
 )
 
-@router.get('/{product_id}')
-async def get_product_by_id(product_id: int):
+@router.get('/{product_id}', status_code=status.HTTP_200_OK)
+async def get_product_by_id(
+  response: Response,
+  product_id: int
+):
   data = getProduct(product_id)
-  return response(data)
+  return response_wrapper(data, response)
 
-@router.get('/')
+@router.get('/', status_code=status.HTTP_200_OK)
 async def get_product(
+  response: Response,
   brand: str | None = None,
   bought: bool | None = None
 ):
@@ -27,25 +31,32 @@ async def get_product(
     data = getAllBoughtProducts()
   else:
     data = getAllProducts()
-  return response(data)
+  return response_wrapper(data, response)
 
-@router.post('/')
-async def create_product(product: Product):
+@router.post('/', status_code=status.HTTP_201_CREATED)
+async def create_product(
+  product: Product,
+  response: Response
+):
   data = insertProduct(product)
-  return response(data)
+  return response_wrapper(data, response)
 
-@router.patch('/{product_id}')
-async def modify_product(product_id: int, product: Product):
+@router.patch('/{product_id}', status_code=status.HTTP_200_OK)
+async def modify_product(
+  product_id: int, 
+  product: Product,
+  response: Response,
+):
   product.codProduct = product_id
   data = modifyProduct(product)
-  return response(data)
+  return response_wrapper(data, response)
 
-@router.post('/not-billed-view')
-async def create_not_billed_view():
+@router.post('/not-billed-view', status_code=status.HTTP_201_CREATED)
+async def create_not_billed_view(response: Response):
   data = createProductsNotBilledView()
-  return response(data)
+  return response_wrapper(data, response)
 
-@router.delete('/not-billed-view')
-async def drop_not_billed_view():
+@router.delete('/not-billed-view', status_code=status.HTTP_204_NO_CONTENT)
+async def drop_not_billed_view(response: Response):
   data = dropProductsNotBilledView()
-  return response(data)
+  return response_wrapper(data, response)
