@@ -246,3 +246,10 @@ def createProductsNotBilledView():
     except Exception as e:
         print(f'Error creating view: {e}')
         return None
+    
+def dropProductsNotBilledView():
+    '''
+    Drops a view of products that were not billed yet. 
+    '''
+    mydb.drop_collection('notBilledProducts')
+    return True

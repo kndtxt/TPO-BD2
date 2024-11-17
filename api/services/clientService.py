@@ -1,5 +1,5 @@
 #============ Imports ==================>
-from persistence.persistence import CLIENTS
+from persistence.persistence import CLIENTS, BILLS
 import persistence.cache as c
 from models import Client
 from pydantic import ValidationError
@@ -263,6 +263,56 @@ def getClientsWithNoBills():
             return None
     except Exception as e:
         print(f'Error finding all clients without bills: {e}')
+        return None
+    
+def getClientTotalWithTaxes():
+    '''
+    Gets all the clients' name and surnames with their total spent
+
+    Returns:
+        List of client name and surnames with their total spent. None otherwise
+    '''
+    try:
+        pipeline = [
+            {
+                '$group': {
+                    '_id': '$clientNbr',
+                    'total_with_taxes': { '$sum': '$taxxedTotal'}
+                }
+            },
+            {
+                '$lookup': {
+                    'from': CLIENTS.name,
+                    'localField': '_id',
+                    'foreignField': 'clientNbr',
+                    'as': 'client'
+                }
+            },
+            {
+                '$unwind': '$client'
+            },
+            {
+                '$replaceRoot': {
+                    'newRoot': {
+                        '$mergeObjects': ['$client', {'total_with_taxes': '$total_with_taxes'}]
+                    }
+                }
+            },
+            {
+                '$project': {
+                    '_id': 0,
+                    'name': 1,
+                    'lastName': 1,
+                    'total_with_taxes': 1,
+                }
+            }
+        ]
+        bills_by_clientNbr = clean_data(BILLS.aggregate(pipeline))
+        
+        return bills_by_clientNbr
+    
+    except Exception as e:
+        print(f'Error finding bills bought by that client: {e}')
         return None
     
 #============ Modify ===========>
