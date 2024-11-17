@@ -8,6 +8,7 @@ from utils.json_serialize_utils import clean_data
 from datetime import datetime
 from utils.api_response import ResponseStatus
 from fastapi import status
+from pymongo.errors import CollectionInvalid
 
 #session to allow transactional behaviour
 
@@ -101,7 +102,7 @@ def getAllBills():
 
         return bills
     except Exception as e:
-        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Error finding all the bills: {e}')
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
     
 def getBillsByBrand(brand: str):
     '''
@@ -128,8 +129,34 @@ def getBillsByBrand(brand: str):
             c.cache_set(redis_key, bills)
         return bills
     except Exception as e:
-        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Error finding all the bills: {e}')
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
 
+def getBill(billNbr: int):
+    '''
+    Searches for a specific bill
+
+    Args:
+        int: the bill number
+    
+    Returns:
+        bill with that number
+    '''
+    try:
+        redis_key = f'bills:{billNbr}'
+        cached_bill = c.cache_get(redis_key)
+        if cached_bill:
+            return cached_bill
+        
+        query = {'billNbr': billNbr}
+        projection = {'_id': 0}
+        bill = clean_data(BILLS.find(query, projection))
+
+        if len(bill) > 0:
+            c.cache_set(redis_key, bill)
+
+        return bill
+    except Exception as e:
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
     
 def getBills(name: str, surname: str):
     '''
@@ -151,18 +178,18 @@ def getBills(name: str, surname: str):
         
         maybe_clients = getClient(name, surname)
         if isinstance(maybe_clients, type(None)):
-            return None
+            return ResponseStatus(status.HTTP_404_NOT_FOUND, 'No clients with that name were found.')
 
         clientNbrs = [c['clientNbr'] for c in maybe_clients]
         query = {'clientNbr': {'$in': clientNbrs}}
-        bill_list = list(BILLS.find(query))
-
+        projection = {'_id': 0, }
+        bill_list = clean_data(BILLS.find(query, projection))
         if bill_list:
             c.cache_set(redis_key, bill_list)
 
         return bill_list
     except Exception as e:
-        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Error finding all the bills: {e}')
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
 
 
 
@@ -174,8 +201,11 @@ def createBillDataView():
     '''
     try:
         pipeline = [
-            {'$match':{}},
-            {'$project': {
+            {
+                '$match':{}
+            },
+            {
+                '$project': {
                     '_id':0,
                     'billNbr': 1,
                     'date': 1,
@@ -185,24 +215,28 @@ def createBillDataView():
                     'clientNbr': 1,
                     'details': 1
                 }
+            },
+            {
+                '$sort': {
+                    'date': 1
+                }
             }
         ]
 
         mydb.create_collection('billDataByDate', viewOn='bills', pipeline=pipeline)
-        view = list(mydb['billDataByDate'].find().sort('date', 1))
-        for doc in view:
-            if 'date' in doc and isinstance(doc['date'], datetime):
-                doc['date'] = doc['date'].strftime('%Y-%m-%d')      #convert datetime to string again
+        view = clean_data(mydb['billDataByDate'].find())
         return view
+    except CollectionInvalid as e:
+        return ResponseStatus(status.HTTP_409_CONFLICT, f'Invalid collection: {e}')
     except Exception as e:
-        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Error finding all the bills: {e}')
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
 
 def dropBillDataView():
     '''
     Drops the view that groups bills by date.
     '''
     try:
-        mydb.drop_collection('billDateByDate')
+        mydb.drop_collection('billDataByDate')
     except Exception as e:
-        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Error finding all the bills: {e}')
+        return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
     return True

@@ -34,7 +34,7 @@ def populateDb():
 
     with open('./resources/e01_cliente.csv', mode='r', encoding='ISO-8859-1') as clientsFile:
         clientsReader = csv.reader(clientsFile, delimiter=';')
-        ClientHeaders = next(clientsReader)   #skip headers
+        next(clientsReader)   #skip headers
 
         for row in clientsReader:
             clientNbr = row[0]
@@ -54,7 +54,7 @@ def populateDb():
         
     with open('./resources/e01_telefono.csv', mode='r',encoding='ISO-8859-1') as phonesFile:
         phonesReader = csv.reader(phonesFile, delimiter=';')
-        phoneHeaders = next(phonesReader)
+        next(phonesReader)
 
         for row in phonesReader:
             clientNbr = row[3]
@@ -75,7 +75,7 @@ def populateDb():
     products = {}
     with open('./resources/e01_producto.csv', mode='r',encoding='ISO-8859-1') as productFile:
         productReader = csv.reader(productFile, delimiter=';')
-        productHeader = next(productReader)
+        next(productReader)
 
         for row in productReader:
             codProduct = row[0]
@@ -95,7 +95,7 @@ def populateDb():
     bills = {}
     with open('./resources/e01_factura.csv', mode='r',encoding='ISO-8859-1') as billFile:
         billReader = csv.reader(billFile, delimiter=';')
-        billHeader = next(billReader)
+        next(billReader)
 
         for row in billReader:
             billNbr = row[0]
@@ -112,7 +112,7 @@ def populateDb():
 
         with open('./resources/e01_detalle_factura.csv', mode='r',encoding='ISO-8859-1') as billDetailFile:
             billDetailReader = csv.reader(billDetailFile, delimiter=';')
-            billDetailHeader = next(billDetailReader)
+            next(billDetailReader)
 
             for row in billDetailReader:
                 billNbr = row[0]
@@ -126,10 +126,10 @@ def populateDb():
         bill = bills[billIndex]
         clientQuery = {'clientNbr': int(bill['clientNbr'])}
         operation = {'$push': {'billNbrs': bill['billNbr']}} 
-        updateClient = CLIENTS.update_one(clientQuery, operation)       #add reference to bill that client has purchased        
+        CLIENTS.update_one(clientQuery, operation)       #add reference to bill that client has purchased        
         for detail in bill['details']:
             productQuery = {'codProduct': int(detail['codProduct'])}
-            updateProduct = PRODUCTS.update_one(productQuery, operation)    #add reference to bill where product was billed
+            PRODUCTS.update_one(productQuery, operation)    #add reference to bill where product was billed
         BILLS.insert_one(bills[billIndex])
 
             

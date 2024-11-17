@@ -8,6 +8,7 @@ from utils.json_serialize_utils import clean_data
 import json
 from fastapi import status
 from utils.api_response import ResponseStatus
+from pymongo.errors import CollectionInvalid
 
 #============ Setters ==================>
 def insertProduct(product: Product):
@@ -229,17 +230,14 @@ def createProductsNotBilledView():
                     'price': 1,
                     'stock': 1               
                 }
-            },
-            {
-                '$sort': {
-                    'date': 1
-                }
             }
         ]
 
         mydb.create_collection('notBilledProducts', viewOn='products', pipeline=pipeline)
-        view = mydb['notBilledProducts'].find()
+        view = clean_data(mydb['notBilledProducts'].find())
         return view
+    except CollectionInvalid as e:
+        return ResponseStatus(status.HTTP_409_CONFLICT, f'Invalid collection: {e}')
     except Exception as e:
         return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
 

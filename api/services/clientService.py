@@ -63,6 +63,7 @@ def _(clientNbr: int):
         redis_key = f'client:{clientNbr}'
         cached_client = c.cache_get(redis_key)
         if cached_client:
+            cached_client.pop('billNbrs', None)
             return cached_client
 
         query = {'clientNbr': clientNbr}
@@ -70,9 +71,10 @@ def _(clientNbr: int):
         client = CLIENTS.find_one(query, projection)
 
         if client:
-            client.pop('billNbrs', None)
             c.cache_set(redis_key, client)
-        
+            client.pop('billNbrs', None)
+        else:
+            return ResponseStatus(status.HTTP_404_NOT_FOUND, f'Client {clientNbr} not found.')
         return client
     except Exception as e:
         return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
@@ -98,7 +100,7 @@ def _(name: str, lastName: str):
             return cached_clients
 
         query = {'name': name, 'lastName': lastName}
-        projection = {'_id': 0, 'billNbrs': 0}
+        projection = {'_id': 0, 'billNbrs': 0} # aca creo que está bien sacar billNbrs dentro de la cache
         clients_list = clean_data(CLIENTS.find(query, projection))
 
         if len(clients_list) > 0:
@@ -332,20 +334,21 @@ def modifyClient(client: Client):
                 fields[key] = value
         operation = {'$set': fields}
         result = CLIENTS.update_one(filter, operation)
-        if result.modified_count <= 0: raise Exception('No clients modified')
-        if result:    #update cache
-            name = client['name']
-            surname = client['lastName']
-            redis_keys = [
-                f'client:{clientNbr}',
-                f'clients:{name}:{surname}',
-                'clients:all',
-                'phones:all',
-                'bills:all',
-                f'bills:{name}:{surname}'
-            ]
-            c.cache_mdel(redis_keys)
-            #TODO habria q borrar las bills relacionadass tmb?
+        if result.modified_count <= 0:
+            return ResponseStatus(status.HTTP_404_NOT_FOUND, f'No client with clientNbr {clientNbr}.')
+        
+        name = client['name']
+        surname = client['lastName']
+        redis_keys = [
+            f'client:{clientNbr}',
+            f'clients:{name}:{surname}',
+            'clients:all',
+            'phones:all',
+            'bills:all',
+            f'bills:{name}:{surname}'
+        ]
+        c.cache_mdel(redis_keys)
+        #TODO habria q borrar las bills relacionadass tmb? (creo que ya está?)
         return True
     
     except Exception as e:
@@ -357,11 +360,13 @@ def deleteClient(clientNbr: int):
     try:
         client = getClient(clientNbr)
         if not client:
-            print(f'No client with clientNbr {clientNbr}.')
-            return False
+            return ResponseStatus(status.HTTP_404_NOT_FOUND, f'No client with clientNbr {clientNbr}.')
+
         
         query = {'clientNbr': clientNbr}
-        CLIENTS.delete_one(query)#TODO habria q borrar las bills relacionadass tmb?
+        result = CLIENTS.delete_one(query)#TODO habria q borrar las bills relacionadass tmb?
+        if result == 0: # no debería llegar acá pero chequeo extra
+            return ResponseStatus(status.HTTP_404_NOT_FOUND, f'No client with clientNbr {clientNbr}.')
         BILLS.delete_many(query)
         #update cache
         if len(client['phones']) > 0:
