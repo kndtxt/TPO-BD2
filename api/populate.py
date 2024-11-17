@@ -99,8 +99,8 @@ def main():
     ps.modifyProduct(Product(
                 codProduct= 105,
                 brand= "saracatunga",
-                name= "saracatungan't",
-                description= "heyon't",
+                name= "saraca",
+                description= "heyo",
                 price= 6.8,
                 stock= 8,
                 billNbrs= [2]
@@ -108,6 +108,13 @@ def main():
     print(ps.getProduct(105))
 
 
+    product = Product(codProduct=1000, brand="brand", name="name", description="description", price=100, stock=10, billNbrs=[])
+    ps.insertProduct(product)
+
+    detail=BillDetail(itemNbr=43, amount=1, codProduct=1000)
+    bill = Bill(billNbr=1000, clientNbr=1, total=100, tax=10, 
+                taxxedTotal=110, details=[detail], date=datetime(2023, 5, 10 ))
+    bs.insertNewBill(bill)
 
    
 if __name__ == '__main__':
