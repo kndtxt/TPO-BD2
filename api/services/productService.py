@@ -5,6 +5,7 @@ from models import Product
 from pydantic import ValidationError
 from pymongo.errors import DuplicateKeyError
 from functools import singledispatch
+import json
 
 #============ Setters ==================>
 def insertProduct(product: Product):
@@ -58,6 +59,32 @@ def getProduct(codProd: int):
         print(f"Error finding product: {e}")
         return None
             
+def getProductForBrands(brand: str):
+    '''
+    Searches for the products with a specific brand name
+    Uses redis caching.
+
+    Args:
+        str: the brand name
+
+    Returns:
+        products with a specific brand name. None otherwise.
+    '''
+    try:
+        redis_key = f'product:brand:{brand}'
+        cached_products = c.cache_get(redis_key)
+        if cached_products:
+            return cached_products
+        
+        query = {'brand': {'$regex': brand}}
+        product = list(PRODUCTS.find(query))
+        if len(product) > 0:        
+            c.cache_set(redis_key, product)
+            
+        return product
+    except Exception as e:
+        print(f"Error finding product: {e}")
+        return None
 
 #============ Modify ===========>
 def modifyProduct(product):

@@ -1,5 +1,5 @@
-import api.persistence.persistence as p
-import api.persistence.cache as c
+import persistence.persistence as p
+import persistence.cache as c
 
 def main():
     c.flushCache()
