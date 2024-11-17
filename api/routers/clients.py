@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from services.clientService import *
+from utils.api_response import response
 from models import *
 
 router = APIRouter(
@@ -36,22 +37,26 @@ async def get_client(
       data = getAllClients()
   else:
     data = getAllClients()
-  return {'data': data}
+  return response(data)
 
 @router.get('/{client_id}')
 async def get_client_by_id(client_id: int):
-  return {'data': getClient(client_id)}
+  data = getClient(client_id)
+  return response(data)
 
 @router.post('/')
 async def create_client(client: Client):
-  return {'data': insertClient(client)}
+  data = insertClient(client)
+  return response(data)
 
 @router.patch('/{client_id}')
 async def modify_client(client_id: int, client: Client):
   client.clientNbr = client_id
-  return {'data': modifyClient(client)}
+  data = modifyClient(client)
+  return response(data)
 
 @router.delete('/{client_id}')
 async def delete_client_by_id(client_id: int):
-  return {'data': deleteClient(client_id)}
+  data = deleteClient(client_id)
+  return response(data)
 

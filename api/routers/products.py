@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from services.productService import *
 from models import Product
+from utils.api_response import response
 
 router = APIRouter(
   prefix='/products',
@@ -9,7 +10,8 @@ router = APIRouter(
 
 @router.get('/{product_id}')
 async def get_product_by_id(product_id: int):
-  return {'data': getProduct(product_id)}
+  data = getProduct(product_id)
+  return response(data)
 
 @router.get('/')
 async def get_product(
@@ -25,21 +27,25 @@ async def get_product(
     data = getAllBoughtProducts()
   else:
     data = getAllProducts()
-  return {'data': data}
+  return response(data)
 
 @router.post('/')
 async def create_product(product: Product):
-  return {'data': insertProduct(product)}
+  data = insertProduct(product)
+  return response(data)
 
 @router.patch('/{product_id}')
 async def modify_product(product_id: int, product: Product):
   product.codProduct = product_id
-  return {'data': modifyProduct(product)}
+  data = modifyProduct(product)
+  return response(data)
 
 @router.post('/not-billed-view')
 async def create_not_billed_view():
-  return {'data': createProductsNotBilledView()}
+  data = createProductsNotBilledView()
+  return response(data)
 
 @router.delete('/not-billed-view')
 async def drop_not_billed_view():
-  return {'data': dropProductsNotBilledView()}
+  data = dropProductsNotBilledView()
+  return response(data)

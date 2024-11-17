@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from services.billService import *
 from models import *
+from utils.api_response import response
 
 router = APIRouter(
   prefix='/bills',
@@ -9,7 +10,8 @@ router = APIRouter(
 
 @router.post('/')
 async def create_bill(bill: Bill): 
-  return {'data': insertNewBill(bill)}
+  data = insertNewBill(bill)
+  return response(data)
 
 @router.get('/')
 async def get_bill(name: str | None = None, surname: str | None = None, brand: str | None = None):
@@ -22,12 +24,14 @@ async def get_bill(name: str | None = None, surname: str | None = None, brand: s
     data = getBillsByBrand(brand)
   else:
     data = getAllBills()
-  return {'data': data}
+  return response(data)
 
 @router.post('/date-view')
 async def create_bills_by_date_view():
-  return {'data': createBillDataView()}
+  data = createBillDataView()
+  return response(data)
 
 @router.delete('/date-view')
 async def drop_bills_by_date_view():
-  return {'data': dropBillDataView()}
+  data = dropBillDataView()
+  return response(data)

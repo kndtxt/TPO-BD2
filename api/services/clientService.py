@@ -171,7 +171,7 @@ def getAllClientsWithBillNbrs():
         print(f'Error finding all clients: {e}')
         return None
 
-def getAllPhones():
+def getAllPhones(): # TODO: maybe reorder so the first field is phone?
     '''
     Searches for all the phones in database.
     Caches query afterwards.

@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from services.clientService import getAllPhones
+from utils.api_response import response
 
 router = APIRouter(
   prefix='/phones',
@@ -8,4 +9,5 @@ router = APIRouter(
 
 @router.get('/')
 async def get_phones():
-  return {'data': getAllPhones()}
+  data = getAllPhones()
+  return response(data)
