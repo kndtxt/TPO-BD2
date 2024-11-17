@@ -1,7 +1,7 @@
 #============ Imports ==================>
 from pydantic import BaseModel, field_validator, model_validator
 from typing import List
-from datetime import date
+from datetime import date, datetime
 
 #============ Models ==================>
 class Product(BaseModel):
@@ -63,7 +63,7 @@ class BillDetail(BaseModel):
 
 class Bill(BaseModel):
     billNbr: int
-    date: date
+    date: datetime
     total: float
     tax: float
     taxxedTotal: float
@@ -91,15 +91,17 @@ class Bill(BaseModel):
     @field_validator('date')
     def validate_date(cls, v):
         # Validar que la fecha no sea futura
-        if v > date.today():
+        if isinstance(v, str):
+            v = datetime.fromisoformat(v)
+        if v > datetime.today():
             raise ValueError('date cant be in the future')
         return v
     
     @model_validator(mode='after')
     def validate_details(cls, values):
-        details = values.get('details', [])
+        details = values.details
         for detail in details:
-            if not isinstance(detail, type(BillDetail)):
+            if not isinstance(detail, BillDetail):
                 raise ValueError('details must be BillDetail instances')
         
         return values
@@ -156,7 +158,7 @@ class Client(BaseModel):
     
     @model_validator(mode='after')
     def validate_phones(cls, values):
-        phones = values.get('phones', [])
+        phones = values.phones
         for phone in phones:
             if not isinstance(phone, type(Phone)):
                 raise ValueError('All phones should be instance of Phone')
