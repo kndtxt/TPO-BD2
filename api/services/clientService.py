@@ -25,19 +25,21 @@ def insertClient(client: Client):
         if len(client['phones']) > 0:
             redis_key = 'phones:all'
             c.cache_del(redis_key)
-        redis_key = 'clients:all'
-        c.cache_del(redis_key)
         name = client['name']
         surname = client['lastName']
-        redis_key = f'clients:{name}:{surname}'
-        c.cache_del(redis_key)
+        redis_keys = [
+            'clients:all',
+            f'clients:{name}:{surname}'
+        ]
+        c.cache_mdel(redis_keys)
 
         return newClient
 
     except ValidationError as e:
         print(f'Data validation error: {e}')
     except DuplicateKeyError as e:
-        print(f'Client for nroCliente: {client["clientNbr"]} already exists!')
+        clientNbr = client['clientNbr']
+        print(f'Client for nroCliente: {clientNbr} already exists!')
         return None
     except Exception as e:
         print(e)
@@ -195,16 +197,16 @@ def getAllPhones():
             {
                 '$project': {
                     '_id': 0,
+                    'phone': { 
+                        'areaCode': '$phones.areaCode',
+                        'phoneNbr': '$phones.phoneNbr',
+                        'phoneType': '$phones.phoneType'
+                    },
                     'clientNbr': 1,
                     'name': 1, 
                     'lastName': 1, 
                     'address': 1, 
                     'active': 1, 
-                    'phone': { 
-                        'areaCode': '$phones.areaCode',
-                        'phoneNbr': '$phones.phoneNbr',
-                        'phoneType': '$phones.phoneType'
-                    }
                 }
             }
         ]
@@ -237,7 +239,7 @@ def getClientsWithBillAmount():
         print(f'Error finding all clients with bill amount: {e}')
         return None
 
-def getClientsWithBills():
+def getClientsWithBills(): #TODO: maybe simplify into one mongo + redis cache instead of using all
     try:
         all_clients = getAllClientsWithBillNbrs()
         if all_clients:
@@ -251,7 +253,7 @@ def getClientsWithBills():
         print(f'Error finding all clients with bills: {e}')
         return None
 
-def getClientsWithNoBills():
+def getClientsWithNoBills(): #TODO: maybe simplify into one mongo + redis cache instead of using all
     try:
         all_clients =  getAllClientsWithBillNbrs()
         if all_clients:
@@ -337,16 +339,17 @@ def modifyClient(client: Client):
         result = CLIENTS.update_one(filter, operation)
         if result.modified_count <= 0: raise Exception('No clients modified')
         if result:    #update cache
-            redis_key = f'client:{clientNbr}'
-            c.cache_del(redis_key)
             name = client['name']
             surname = client['lastName']
-            redis_key = f'clients:{name}:{surname}'
-            c.cache_del(redis_key)
-            redis_key = 'clients:all'
-            c.cache_del(redis_key)
-            redis_key = 'phones:all'
-            c.cache_del(redis_key)
+            redis_keys = [
+                f'client:{clientNbr}',
+                f'clients:{name}:{surname}',
+                'clients:all',
+                'phones:all',
+                'bills:all',
+                f'bills:{name}:{surname}'
+            ]
+            c.cache_mdel(redis_keys)
             #TODO habria q borrar las bills relacionadass tmb?
         return True
     
@@ -364,19 +367,26 @@ def deleteClient(clientNbr: int):
         
         query = {'clientNbr': clientNbr}
         CLIENTS.delete_one(query)#TODO habria q borrar las bills relacionadass tmb?
+        BILLS.delete_many(query)
         #update cache
         if len(client['phones']) > 0:
             redis_key = 'phones:all'
             c.cache_del(redis_key)
-        redis_key = 'clients:all'
-        c.cache_del(redis_key)
-        redis_key = f'client:{clientNbr}'
         name = client['name']
         surname = client['lastName']
-        c.cache_del(redis_key)
-        redis_key = f'clients:{name}:{surname}'
-        c.cache_del(redis_key)
-        #TODO habria q borrar las bills relacionadass tmb?
+        if len(client['billNbrs']) > 0:
+            redis_keys = [
+                'bills:all',
+                f'bills:{name}:{surname}'
+            ]
+            c.cache_mdel(redis_keys)
+        
+        redis_keys = [
+            'clients:all',
+            f'client:{clientNbr}',
+            f'clients:{name}:{surname}',
+        ]
+        c.cache_mdel(redis_keys)
 
         return True
 
