@@ -5,6 +5,7 @@ import persistence.cache as c
 from models import Bill
 from pydantic import ValidationError
 from functools import singledispatch
+from datetime import datetime
 
 #session to allow transactional behaviour
 
@@ -32,8 +33,7 @@ def insertBill(bill):
             updateProduct = PRODUCTS.update_one(productQuery, operation)    #add reference to bill where product was billed
             if updateProduct.matched_count <= 0: raise Exception(f"Product for bill not found.")             
 
-        aux_bill = Bill(**bill)#validate by model
-        newBill = BILLS.insert_one(aux_bill.model_dump())
+        newBill = BILLS.insert_one(bill.model_dump())
         return newBill
     except ValidationError as e:
         print(f"Data validation error: {e}")
@@ -89,6 +89,7 @@ def createBillDataView():
     try:
         pipeline = [{"$match":{}},
                     {"$project": {
+                        "_id":0,
                         "billNbr": 1,
                         "date": 1,
                         "total": 1,
@@ -99,7 +100,10 @@ def createBillDataView():
                     }}]
 
         mydb.create_collection("billDataByDate", viewOn="bills", pipeline=pipeline)
-        view = mydb["billDataByDate"].find().sort("date", 1)
+        view = list(mydb["billDataByDate"].find().sort("date", 1))
+        for doc in view:
+            if 'date' in doc and isinstance(doc['date'], datetime):
+                doc['date'] = doc['date'].strftime("%Y-%m-%d")      #convert datetime to string again
         return view
     except Exception as e:
         print(f"Cannot create view: {e}")

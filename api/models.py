@@ -156,7 +156,7 @@ class Client(BaseModel):
     
     @model_validator(mode='after')
     def validate_phones(cls, values):
-        phones = values.get('phones', [])
+        phones = values.phones
         for phone in phones:
             if not isinstance(phone, type(Phone)):
                 raise ValueError('All phones should be instance of Phone')

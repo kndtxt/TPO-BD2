@@ -13,6 +13,10 @@ def drop_all_tables():
         mydb["clients"].drop()
     if "products" in mydb.list_collection_names():
         mydb["products"].drop()
+    if "notBilledProducts" in mydb.list_collection_names():
+        mydb["notBilledProducts"].drop()
+    if "billDataByDate" in mydb.list_collection_names():
+        mydb["billDataByDate"].drop()
 
 BILLS = mydb["bills"]
 BILLS.create_index([('billNbr', 1)], unique=True)
@@ -98,7 +102,7 @@ def populateDb():
             clientNbr = row[5]
             bills[billNbr] = {
                 "billNbr": int(billNbr),
-                "date": datetime.combine(date.fromisoformat(row[1]), datetime.min.time()),
+                "date": datetime.strptime(row[1], "%Y-%m-%d"),
                 "total": float(row[2]),
                 "tax": float(row[3]),
                 "taxxedTotal": float(row[4]),
