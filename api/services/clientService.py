@@ -364,7 +364,7 @@ def deleteClient(clientNbr: int):
 
         
         query = {'clientNbr': clientNbr}
-        result = CLIENTS.delete_one(query)#TODO habria q borrar las bills relacionadass tmb?
+        result = CLIENTS.delete_one(query)#TODO habria q borrar las bills relacionadass tmb? (creo que ya está?)
         if result == 0: # no debería llegar acá pero chequeo extra
             return ResponseStatus(status.HTTP_404_NOT_FOUND, f'No client with clientNbr {clientNbr}.')
         BILLS.delete_many(query)
