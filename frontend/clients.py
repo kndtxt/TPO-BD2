@@ -1,4 +1,5 @@
 import streamlit as st
+from lib.client_data import get_all_clients_data, get_telephone_numbers_by_name_and_last_name, get_telephone_client_data
 
 st.title("Clients")
 
@@ -15,19 +16,21 @@ option = st.selectbox(
 )
 
 if option == "Show Client Data":
-    # TODO: Endpoint that returns all clients data 
-    st.write("Client Data")
+    client_data = get_all_clients_data()
+    st.write(client_data)
 
 elif option == "Show telephone numbers by Name and Last Name":
-    name = st.text_input("Name", "Jaboc")
+    name = st.text_input("Name", "Jacob")
     last_name = st.text_input("Last Name", "Cooper")
     btn = st.button("Search")
-    # TODO: Endpoint that returns telephone numbers by Name and Last Name
-    st.write("telephone numbers by Name and Last Name")
+
+    if btn:
+        telephones = get_telephone_numbers_by_name_and_last_name(name, last_name)
+        st.write(telephones)
 
 elif option == "Show telephone <> client data":
-    # TODO: Endpoint that returns telephone <> client data
-    st.write("telephone <> client data")
+    telephone_data = get_telephone_client_data()
+    st.write(telephone_data)
 
 elif option == "Show clients with at least one bill":
     # TODO: Endpoint that returns clients with at least one bill

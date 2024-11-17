@@ -1,4 +1,5 @@
 import streamlit as st
+from lib.crud import create_client, edit_client, delete_client, create_product, edit_product, find_client_by_name_and_last_name
 
 st.title("CRUD")
 
@@ -30,7 +31,7 @@ if option == "Create Client":
 
         area_cod = st.text_input(f"Area Code {i+1}", "123")
         number = st.text_input(f"Number {i+1}", "456789")
-        type = st.selectbox(f"Type {i+1}", ("Home", "Work", "Mobile")) # TODO: Checkear que tenga sentido
+        type = st.selectbox(f"Type {i+1}", ("Home", "Work", "Mobile")) # TODO: M o F
 
         phone_numbers.append({"area_cod": area_cod, "number": number, "type": type})
     
@@ -45,7 +46,7 @@ elif option == "Edit Client":
 
     if opt == "ID":
         st.number_input("ID", 0)
-        find_btn = st.button("Search")
+        id_btn = st.button("Search")
     
     else:
         name = st.text_input("Name", "John")
@@ -68,19 +69,23 @@ elif option == "Delete Client":
     opt = st.selectbox("Find by", ("Name and Last Name", "ID"))
 
     if opt == "ID":
-        st.number_input("ID", 0)
-        find_btn = st.button("Search")
+        id_to_delete = st.number_input("ID", 0)
+        id_btn = st.button("Delete")
+
+        if id_btn:
+            delete_client(id_to_delete)
     
     else:
-        name = st.text_input("Name", "John")
-        last_name = st.text_input("Last Name", "Doe")
-        find_btn = st.button("Search")
+        name = st.text_input("Name", "Xerxes")
+        last_name = st.text_input("Last Name", "Hale")
+        name_btn = st.button("Delete")
 
-    btn = st.button("Delete")
+        if name_btn:
+            name = find_client_by_name_and_last_name(name, last_name)
+            # TODO: handle when not found
+            delete_client(name['clientNbr'])
 
-    if btn:
-        pass
-        # TODO: Endpoint that deletes a client
+
 
 elif option == "Create Product":
     name = st.text_input("Name", "Product")
