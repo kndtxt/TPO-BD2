@@ -1021,6 +1021,6 @@ req 13| modify
 req 13| delete
 None
 req 14| create
-{'codProduct': 105, 'brand': 'starlight', 'name': 'saracatunga', 'description': 'heyo', 'price': 6.8, 'stock': 8}
+{'codProduct': 105, 'brand': 'starlight', 'name': 'saracatunga', 'description': 'heyo', 'price': 6.8, 'stock': 8, '_id': '673a1e798ddf677b552ccacf'}
 req 14| modify
-{'codProduct': 105, 'brand': 'saracatunga', 'name': "saracatungan't", 'description': "heyon't", 'price': 6.8, 'stock': 8}
+{'codProduct': 105, 'brand': 'saracatunga', 'name': 'saraca', 'description': 'heyo', 'price': 6.8, 'stock': 8}

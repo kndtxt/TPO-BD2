@@ -3,7 +3,8 @@ import persistence.cache as c
 import services.billService as bs
 import services.productService as ps
 import services.clientService as cs
-from models import Client, Product
+from models import Client, Product, BillDetail, Bill
+from datetime import datetime
 
 def main():
     c.flushCache()
@@ -116,6 +117,6 @@ def main():
                 taxxedTotal=110, details=[detail], date=datetime(2023, 5, 10 ))
     bs.insertNewBill(bill)
 
-   
+
 if __name__ == '__main__':
     main()
