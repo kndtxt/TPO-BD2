@@ -22,6 +22,7 @@ def main():
     #query 3
     print("req 3 (son 198)")
     print(len(cs.getAllPhones()))
+    print(cs.getAllPhones())
 
     #query 4
     print("req 4")
@@ -35,17 +36,21 @@ def main():
     print("req 6")
     print(cs.getClientsWithBillAmount())
 
-    #print("req 7") TODO
+    #query 7
+    print("req 7")
+    print(bs.getBills("Kai", "Bullock"))
 
     #query 8
     print("req 8")
     print(ps.getAllBoughtProducts())
 
+    #query 9
+    print("req 9")
+    print(bs.getBillsByBrand("Ipsum"))
 
-#print("req 9") TODO
-    #print()
-    #print("req 10") TODO
-    #print()
+    #query 10
+    print("req 10")
+    print(bs.getClientTotalWithTaxes())
 
     #query 11   
     print("req 11") 
