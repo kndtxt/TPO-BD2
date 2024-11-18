@@ -14,11 +14,6 @@ def find_product_by_id(id):
     product = requests.get(f"http://127.0.0.1:8000/products/{id}").json()['data']
     return product
 
-# TODO: delete?
-def find_product_by_name(name):
-    pass
-
-#TODO: InsertOneResult has no len()
 def create_client(id, name, last_name, address, telephones):
     body = {
         "clientNbr": id,

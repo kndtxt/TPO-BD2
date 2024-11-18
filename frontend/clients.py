@@ -36,13 +36,11 @@ elif option == "Show telephone numbers by Name and Last Name":
         for telephone in telephones:
             st.write(f"Area code: {telephone['areaCode']} Number: {telephone['phoneNbr']} Type: {telephone['phoneType']}")
 
-# TODO: check
 elif option == "Show telephone <> client data":
     telephone_data = get_telephone_client_data()['data']
     for telephone in telephone_data:
         st.write("Name: " + telephone['name'] + " " + telephone['lastName'] + " ID: " + str(telephone['clientNbr']))
-        for phone in telephone['phone']:
-            st.write(telephone['phone'][phone]) 
+        st.write(telephone['phone'])
     
 elif option == "Show clients with at least one bill":
     data = get_clients_with_at_least_one_bill()

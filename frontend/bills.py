@@ -21,8 +21,6 @@ if option == "Name and Last Name <> Amount of Bills":
     for client in data:
         st.write(f"**{client}**: {data[client]} bills")
  
-
-# TODO: check
 elif option == "Bills by Name and Last Name":
     name = st.text_input("Name", "Kai")
     last_name = st.text_input("Last Name", "Bullock")
@@ -32,7 +30,6 @@ elif option == "Bills by Name and Last Name":
         data = get_bills_by_name_and_last_name(name, last_name)
         st.write(data)
 
-# TODO: check
 elif option == "Bills with products from a particular brand":
     brand = st.text_input("Brand", "Ipsum")
     btn = st.button("Search")
@@ -42,7 +39,8 @@ elif option == "Bills with products from a particular brand":
         if data == []:
             st.write("No bills found")
         else:
-            st.write(data)
+            for product in data:
+                st.write(f"**Product Code**: {product['codProduct']} **Name**: {product['name']} **Brand**: {product['brand']} **Description**: {product['description']}")
 
 elif option == "Name and Last Name <> what was spent":
     data = get_name_last_name_money_spent()
