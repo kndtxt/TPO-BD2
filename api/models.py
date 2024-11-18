@@ -1,17 +1,17 @@
 #============ Imports ==================>
 from pydantic import BaseModel, field_validator, model_validator
 from typing import List
-from datetime import date, datetime
+from datetime import datetime
 
 #============ Models ==================>
 class Product(BaseModel):
-    codProduct: int
-    brand: str
-    name: str
-    description: str
-    price: float
-    stock: int
-    billNbrs: List[int]#numeros de facturas
+    codProduct: int = 10
+    brand: str = 'Lorem Ipsum'
+    name: str = 'Dolor sit amet'
+    description: str = 'Consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua'
+    price: float = '199.99'
+    stock: int = 17
+    billNbrs: List[int] = [3]
 
     @field_validator('codProduct')
     def validate_codProduct(cls, v):
@@ -22,7 +22,7 @@ class Product(BaseModel):
     @field_validator('name', 'brand', 'description')
     def validate_strings(cls, v):
         if len(v) > 45:
-            raise ValueError('name, marca y description must be shorter than 45 chars')
+            raise ValueError('name, brand and description must be shorter than 45 chars')
         return v
 
     @field_validator('price')
@@ -39,9 +39,9 @@ class Product(BaseModel):
     
 
 class BillDetail(BaseModel):
-    itemNbr: int
-    codProduct: int
-    amount: float
+    itemNbr: int = 171
+    codProduct: int = 10
+    amount: float = 17
 
     @field_validator('itemNbr')
     def validate_itemNbr(cls, v):
@@ -62,13 +62,13 @@ class BillDetail(BaseModel):
         return v
 
 class Bill(BaseModel):
-    billNbr: int
-    date: datetime
-    total: float
-    tax: float
-    taxxedTotal: float
-    details: List[BillDetail]
-    clientNbr: int
+    billNbr: int = 171
+    date: datetime = datetime(2024,9,11)
+    total: float = 201.71
+    tax: float = 21
+    taxxedTotal: float = 244.07
+    details: List[BillDetail] = []
+    clientNbr: int = 9
 
     @field_validator('billNbr')
     def validate_billNbr(cls, v):
@@ -85,7 +85,7 @@ class Bill(BaseModel):
     @field_validator('total', 'tax', 'taxxedTotal')
     def validate_total(cls, v):
         if v <= 0:
-            raise ValueError('total must be positive')
+            raise ValueError('total, tax and taxxedTotal must be positive')
         return v
 
     @field_validator('date')
@@ -107,9 +107,9 @@ class Bill(BaseModel):
         return values
 
 class Phone(BaseModel):
-    areaCode: int
-    phoneNbr: int
-    phoneType: str
+    areaCode: int = 624
+    phoneNbr: int = 4263378
+    phoneType: str = 'F'
 
     @field_validator('areaCode')
     def validate_areaCode(cls, v):
@@ -130,13 +130,13 @@ class Phone(BaseModel):
         return v
 
 class Client(BaseModel):
-    clientNbr: int
-    name: str
-    lastName: str
-    address: str
-    active: int
-    phones: List[Phone]
-    billNbrs: List[int]
+    clientNbr: int = 9
+    name: str = 'John'
+    lastName: str = 'Smith'
+    address: str = 'Awesome St. 557'
+    active: int = 63
+    phones: List[Phone] = []
+    billNbrs: List[int] = []
 
     @field_validator('clientNbr')
     def validate_clientNbr(cls, v):
@@ -160,12 +160,7 @@ class Client(BaseModel):
     def validate_phones(cls, values):
         phones = values.phones
         for phone in phones:
-            if not isinstance(phone, type(Phone)):
+            if not isinstance(phone, Phone):
                 raise ValueError('All phones should be instance of Phone')
         
         return values
-
-    class Config:
-        # We can specify this to handle MongoDB's ObjectId properly if needed
-        use_enum_values = True
-        orm_mode = True
