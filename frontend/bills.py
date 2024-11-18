@@ -9,7 +9,6 @@ option = st.selectbox(
         "Name and Last Name <> Amount of Bills",
         "Bills by Name and Last Name",
         "Bills with products from a particular brand",
-        "Name and Last Name <> what was spent",
         "Bill data ordered by dates",
         "Products that were not billed",
         "Products billed at least once"
@@ -46,11 +45,6 @@ elif option == "Bills with products from a particular brand":
         else:
             for product in data:
                 st.write(f"**Product Code**: {product['codProduct']} **Name**: {product['name']} **Brand**: {product['brand']} **Description**: {product['description']}")
-
-elif option == "Name and Last Name <> what was spent":
-    data = get_name_last_name_money_spent()
-    for client in data:
-        st.write(f"**{client}**: ${data[client]:.2f}")
 
 elif option == "Bill data ordered by dates":
     data = get_bill_data_ordered_by_dates()

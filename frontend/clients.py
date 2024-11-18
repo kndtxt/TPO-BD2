@@ -1,5 +1,6 @@
 import streamlit as st
 from lib.client_data import get_all_clients_data, get_telephone_numbers_by_name_and_last_name, get_telephone_client_data, get_clients_with_at_least_one_bill, get_clients_without_bills, get_clients_number_of_bills
+from lib.bills_data import get_name_last_name_money_spent
 
 st.title("Clients")
 
@@ -11,7 +12,8 @@ option = st.selectbox(
         "Show telephone <> client data",
         "Show clients with at least one bill",
         "Show clients without bills",
-        "Clients <> Number of bills"
+        "Clients <> Number of bills",
+        "Name and Last Name <> what was spent"
     ),
 )
 
@@ -62,3 +64,8 @@ elif option == "Clients <> Number of bills":
     data = get_clients_number_of_bills()
     for client in data:
         st.write(f"Name: {client} -- Number of bills: {data[client]}")
+
+elif option == "Name and Last Name <> what was spent":
+    data = get_name_last_name_money_spent()
+    for client in data:
+        st.write(f"**{client}**: ${data[client]:.2f}")
