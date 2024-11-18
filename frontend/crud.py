@@ -18,6 +18,7 @@ if option == "Create Client":
 
     st.subheader("Client Data")
 
+    id = st.number_input("ID", 0)
     name = st.text_input("Name", "John")
     last_name = st.text_input("Last Name", "Doe")
     telephone = st.text_input("Address", "Mulholland Drive")
@@ -31,14 +32,13 @@ if option == "Create Client":
 
         area_cod = st.text_input(f"Area Code {i+1}", "123")
         number = st.text_input(f"Number {i+1}", "456789")
-        type = st.selectbox(f"Type {i+1}", ("Home", "Work", "Mobile")) # TODO: M o F
+        type = st.selectbox(f"Type {i+1}", ("M", "F"))
 
-        phone_numbers.append({"area_cod": area_cod, "number": number, "type": type})
+        phone_numbers.append({"areaCod": area_cod, "phoneNbr": number, "phoneType": type})
     
     btn = st.button("Create")
     if btn:
-        pass
-        # TODO: Endpoint that creates a client
+        create_client(id, name, last_name, telephone, phone_numbers)
 
 elif option == "Edit Client":
     st.subheader("Find Client")

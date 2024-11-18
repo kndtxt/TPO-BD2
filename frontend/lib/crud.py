@@ -14,15 +14,41 @@ def find_product_by_id(id):
     product = requests.get(f"http://127.0.0.1:8000/products/{id}").json()['data']
     return product
 
+# TODO: se hace?
 def find_product_by_name(name):
     pass
 
 # Telephone is a array
-def create_client(name, last_name, telephones):
-    pass
+def create_client(id, name, last_name, address, telephones):
+    body = {
+        "clientNbr": id,
+        "name": name,
+        "lastName": last_name,
+        "address": address,
+        "active": 63,
+        "phones": telephones,
+        "billNbrs": []
+    }
+    response = requests.post("http://127.0.0.1:8000/clients/", json=body).json()
 
-def edit_client(id, name, last_name, telephone):
-    pass
+    if ('detail' in response.keys()):
+        return response['detail'][0]['msg']
+    else:
+        return True
+
+def edit_client(id, name, last_name, address, telephones):
+    bills = find_client_by_id(id)['billNbrs']
+    active = find_client_by_id(id)['active']
+    body = {
+        "clientNbr": id,
+        "name": name,
+        "lastName": last_name,
+        "address": address,
+        "active": active,
+        "phones": telephones,
+        "billNbrs": bills
+    }
+    response = requests.patch(f"http://127.0.0.1:8000/clients/{id}", json=body).json()
 
 def delete_client(id):
     response = requests.delete(f"http://127.0.0.1:8000/clients/{id}").json()
@@ -49,5 +75,16 @@ def create_product(id, name, brand, description, price, stock):
     else:
         return True # Created
 
-def edit_product(id, name, brand, description, price):
-    pass
+def edit_product(id, name, brand, description, price, stock):
+    bills = find_product_by_id(id)['billNbrs']
+    body = {
+        "codProduct": id,
+        "brand": brand,
+        "name": name,
+        "description": description,
+        "price": price,
+        "stock": stock,
+        "billNbrs": bills
+    }
+    response = requests.patch(f"http://127.0.0.1:8000/products/{id}", json=body).json()
+
