@@ -21,7 +21,7 @@ def insertClient(client: Client):
     ''' 
     try:
         client = client.model_dump()
-        newClient = CLIENTS.insert_one(client)        
+        newClient = clean_data(CLIENTS.insert_one(client))    
         #update cache
         if len(client['phones']) > 0:
             redis_key = 'phones:all'
