@@ -44,7 +44,6 @@ elif option == "Bills with products from a particular brand":
         if data == []:
             st.write("No bills found")
         else:
-            st.write(data)
             for product in data:
                 st.write(f"**Product Code**: {product['codProduct']} **Name**: {product['name']} **Brand**: {product['brand']} **Description**: {product['description']}")
 
