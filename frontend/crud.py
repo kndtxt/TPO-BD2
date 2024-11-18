@@ -124,6 +124,7 @@ elif option == "Delete Client":
         if name_btn:
             name = find_client_by_name_and_last_name(name, last_name)
             delete_client(name['clientNbr'])
+            st.success("Client deleted successfully.")
 
 
 
@@ -138,12 +139,12 @@ elif option == "Create Product":
 
     if btn:
         create_product(id, name, brand, description, price, stock)
+        st.success("Product created successfully.")
 
 elif option == "Modify Product":
     st.subheader("Find Product")
     opt = st.selectbox("Find by", ("ID",))
 
-    # Initialize product state if not already initialized
     if 'product' not in st.session_state:
         st.session_state.product = {
             "name": "",
@@ -169,7 +170,7 @@ elif option == "Modify Product":
 
     product = st.session_state.product
 
-    if product and product.get('codProduct') > 0:  # Only show form if product is found
+    if product and product.get('codProduct') > 0:  
         st.subheader("Product Data")
 
         name = st.text_input("Name", product['name'], key="name_input")
