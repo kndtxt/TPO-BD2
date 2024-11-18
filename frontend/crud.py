@@ -39,6 +39,8 @@ if option == "Create Client":
     btn = st.button("Create")
     if btn:
         create_client(id, name, last_name, telephone, phone_numbers)
+        st.success("Client created successfully.")
+        
 elif option == "Edit Client":
     st.subheader("Find Client")
     opt = st.selectbox("Find by", ("Name and Last Name", "ID"))

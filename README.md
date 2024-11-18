@@ -14,3 +14,8 @@ To run the API
 ```
 fastapi dev api/main.py
 ```
+
+To run the project (API + UI)
+```
+./run.sh
+```

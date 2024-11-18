@@ -7,7 +7,6 @@ def get_all_clients_data():
 
 def get_telephone_numbers_by_name_and_last_name(name, last_name):
     telephones = requests.get(f"http://127.0.0.1:8000/clients/?name={name}&surname={last_name}").json()
-    # TODO: show only ID and telephones
     return telephones
 
 # Returns telephone <> Client data
