@@ -30,7 +30,7 @@ async def get_bills(
   data = []
   if (by_name_and_surname):
     data = getBills(name, surname)
-  if (by_brand):
+  elif (by_brand):
     data = getBillsByBrand(brand)
   else:
     data = getAllBills()
