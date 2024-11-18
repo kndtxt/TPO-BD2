@@ -23,7 +23,7 @@ def get_bills_by_name_and_last_name(name, last_name):
     return response
 
 def get_bills_with_products_from_brand(brand):
-    response = requests.get(f"http://127.0.0.1:8000/products/?brand={brand}").json()   
+    response = requests.get(f"http://127.0.0.1:8000/bills/?brand={brand}").json()   
     return response['data']   
 
 # Returns Name, Last Name <> Spent

@@ -27,8 +27,13 @@ elif option == "Bills by Name and Last Name":
     btn = st.button("Search")
 
     if btn:
-        data = get_bills_by_name_and_last_name(name, last_name)
-        st.write(data)
+        data = get_bills_by_name_and_last_name(name, last_name)['data']
+        for bill in data:
+            st.write(f"Bill Number: {bill['billNbr']} Date: {bill['date']}")
+            st.write(f"→ Total: ${bill['total']}")
+            st.write(f"→ Tax: {bill['tax']}%")
+            st.write(f"→ Taxed Total: ${bill['taxxedTotal']:.2f}") 
+            st.write(f"→ Client Number: {bill['clientNbr']}")
 
 elif option == "Bills with products from a particular brand":
     brand = st.text_input("Brand", "Ipsum")
@@ -39,6 +44,7 @@ elif option == "Bills with products from a particular brand":
         if data == []:
             st.write("No bills found")
         else:
+            st.write(data)
             for product in data:
                 st.write(f"**Product Code**: {product['codProduct']} **Name**: {product['name']} **Brand**: {product['brand']} **Description**: {product['description']}")
 

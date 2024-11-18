@@ -40,7 +40,7 @@ elif option == "Show telephone <> client data":
     telephone_data = get_telephone_client_data()['data']
     for telephone in telephone_data:
         st.write("Name: " + telephone['name'] + " " + telephone['lastName'] + " ID: " + str(telephone['clientNbr']))
-        st.write(telephone['phone'])
+        st.write(f"→ Area Code: {telephone['phone']['areaCode']} Number: {telephone['phone']['phoneNbr']} Type: {telephone['phone']['phoneType']}")
     
 elif option == "Show clients with at least one bill":
     data = get_clients_with_at_least_one_bill()
