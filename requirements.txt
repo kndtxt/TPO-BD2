@@ -3,3 +3,4 @@ pymongo
 pydantic
 fastapi
 fastapi[standard]
+streamlit
