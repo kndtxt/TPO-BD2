@@ -116,18 +116,13 @@ def getBillsByBrand(brand: str):
         bills for products with a specific brand name
     '''
     try:
-        redis_key = f'bills:product_brand:{brand}'
-        cached_bills = c.cache_get(redis_key)
-        if cached_bills:
-            return cached_bills
         
         products = getProductForBrands(brand)
         product_ids = [p['codProduct'] for p in products]
         query = {'details.codProduct': {'$in': product_ids}}
         projection = {'_id': 0}
         bills = clean_data(BILLS.find(query, projection))
-        if len(bills) > 0:
-            c.cache_set(redis_key, bills)
+
         return bills
     except Exception as e:
         return ResponseStatus(status.HTTP_500_INTERNAL_SERVER_ERROR, f'Internal server error: {e}')
