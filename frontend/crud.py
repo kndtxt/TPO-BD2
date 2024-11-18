@@ -1,5 +1,5 @@
 import streamlit as st
-from lib.crud import create_client, edit_client, delete_client, create_product, edit_product, find_client_by_name_and_last_name
+from lib.crud import create_client, edit_client, delete_client, create_product, edit_product, find_client_by_id, find_client_by_name_and_last_name, find_product_by_id
 
 st.title("CRUD")
 
@@ -39,31 +39,70 @@ if option == "Create Client":
     btn = st.button("Create")
     if btn:
         create_client(id, name, last_name, telephone, phone_numbers)
-
 elif option == "Edit Client":
     st.subheader("Find Client")
     opt = st.selectbox("Find by", ("Name and Last Name", "ID"))
 
+    if 'client' not in st.session_state:
+        st.session_state.client = {
+            "name": "",
+            "lastName": "",
+            "address": "",
+            "phones": [
+                {
+                    "areaCode": "",
+                    "phoneNbr": "",
+                    "phoneType": ""
+                }
+            ]
+        }
+
     if opt == "ID":
-        st.number_input("ID", 0)
+        id = st.number_input("ID", 0)
         id_btn = st.button("Search")
+
+        if id_btn:
+            client = find_client_by_id(id)
+            st.session_state.client = client  
     
     else:
         name = st.text_input("Name", "John")
         last_name = st.text_input("Last Name", "Doe")
         find_btn = st.button("Search")
 
+        if find_btn:
+            client = find_client_by_name_and_last_name(name, last_name)
+            st.session_state.client = client 
+
+    client = st.session_state.client
+
     st.subheader("Client Data")
-    # TODO: show data from API in input fields to edit
-    name = st.text_input("Name", "")
-    last_name = st.text_input("Last Name", "")
-    telephone = st.text_input("Address", "")
+    name = st.text_input("Name", client['name'], key="name_input")
+    last_name = st.text_input("Last Name", client['lastName'], key="last_name_input")
+    address = st.text_input("Address", client['address'], key="address_input")
+
+    st.write("Phone Numbers")
+    telephones = []
+
+    for i, telephone in enumerate(client['phones']):
+        with st.expander(f"Phone {i + 1}"):
+            area_cod = st.text_input(f"Area Code {i + 1}", telephone['areaCode'], key=f"area_code_{i}")
+            number = st.text_input(f"Number {i + 1}", telephone['phoneNbr'], key=f"number_{i}")
+
+            phone_type = telephone['phoneType'] if telephone['phoneType'] in ("M", "F") else "M"
+            phone_type = st.selectbox(f"Type {i + 1}", ("M", "F"), index=("M", "F").index(phone_type), key=f"phone_type_{i}")
+
+            telephones.append({
+                "areaCode": area_cod,
+                "phoneNbr": number,
+                "phoneType": phone_type
+            })
 
     btn = st.button("Save")
     if btn:
-        pass
-        # TODO: Endpoint that edits a client
-
+        edit_client(client['clientNbr'], name, last_name, address, telephones)
+        st.success("Client updated successfully.")
+   
 elif option == "Delete Client":
     st.subheader("Find Client")
     opt = st.selectbox("Find by", ("Name and Last Name", "ID"))
@@ -82,43 +121,65 @@ elif option == "Delete Client":
 
         if name_btn:
             name = find_client_by_name_and_last_name(name, last_name)
-            # TODO: handle when not found
             delete_client(name['clientNbr'])
 
 
 
 elif option == "Create Product":
+    id = st.number_input("ID", 0)
     name = st.text_input("Name", "Product")
     brand = st.text_input("Brand", "Brand")
     description = st.text_area("Description", "Description")
     price = st.number_input("Price", 0.0)
+    stock = st.number_input("Stock", 0)
     btn = st.button("Create")
 
     if btn:
-        pass
-        # TODO: Endpoint that creates a product
+        create_product(id, name, brand, description, price, stock)
 
 elif option == "Modify Product":
     st.subheader("Find Product")
-    opt = st.selectbox("Find by", ("Name", "ID"))
+    opt = st.selectbox("Find by", ("ID",))
+
+    # Initialize product state if not already initialized
+    if 'product' not in st.session_state:
+        st.session_state.product = {
+            "name": "",
+            "brand": "",
+            "price": 0.0,
+            "description": "",
+            "stock": 0,
+            "codProduct": 0
+        }
 
     if opt == "ID":
-        st.number_input("ID", 0)
+        id = st.number_input("ID", 0)
         find_btn = st.button("Search")
 
+        if find_btn and id > 0:
+            product = find_product_by_id(id)
+            if product:
+                st.session_state.product = product
+                st.success("Product found.")
+            else:
+                st.session_state.product = {} 
+                st.error("Product not found.")
+
+    product = st.session_state.product
+
+    if product and product.get('codProduct') > 0:  # Only show form if product is found
+        st.subheader("Product Data")
+
+        name = st.text_input("Name", product['name'], key="name_input")
+        brand = st.text_input("Brand", product['brand'], key="brand_input")
+        price = st.number_input("Price", product['price'], key="price_input")
+        description = st.text_area("Description", product['description'], key="description_input")
+        stock = st.number_input("Stock", product['stock'], key="stock_input")
+
+        btn = st.button("Edit")
+
+        if btn:
+            edit_product(product['codProduct'], name, brand, description, price, stock)
+            st.success("Product updated successfully.")
     else:
-        name = st.text_input("Name", "Product")
-        find_btn = st.button("Search")
-
-    st.subheader("Product Data")
-
-    # TODO: show data from API in input fields to edit
-    name = st.text_input("Name", "")
-    brand = st.text_input("Brand", "")
-    price = st.number_input("Price", 0.0)
-    btn = st.button("Edit")
-
-    if btn:
-        pass
-        # TODO: Endpoint that edits a product
-
+        st.warning("Search for a product first.")

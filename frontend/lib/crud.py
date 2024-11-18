@@ -14,11 +14,11 @@ def find_product_by_id(id):
     product = requests.get(f"http://127.0.0.1:8000/products/{id}").json()['data']
     return product
 
-# TODO: se hace?
+# TODO: delete?
 def find_product_by_name(name):
     pass
 
-# Telephone is a array
+#TODO: InsertOneResult has no len()
 def create_client(id, name, last_name, address, telephones):
     body = {
         "clientNbr": id,
@@ -29,15 +29,25 @@ def create_client(id, name, last_name, address, telephones):
         "phones": telephones,
         "billNbrs": []
     }
-    response = requests.post("http://127.0.0.1:8000/clients/", json=body).json()
-
-    if ('detail' in response.keys()):
-        return response['detail'][0]['msg']
-    else:
+    try:
+        response = requests.post("http://127.0.0.1:8000/clients/", json=body)
+        response.raise_for_status()
+        data = response.json()
+        
+        if ('detail' in data):
+            return data['detail'][0]['msg']
         return True
+    except requests.exceptions.RequestException as e:
+        return f"Error creating client: {str(e)}"
+
 
 def edit_client(id, name, last_name, address, telephones):
-    bills = find_client_by_id(id)['billNbrs']
+    bills = requests.get("http://127.0.0.1:8000/bills/").json()['data']
+    client_bills = []
+    for bill in bills:
+        if bill['clientNbr'] == id:
+            client_bills.append(bill['billNbr'])
+    
     active = find_client_by_id(id)['active']
     body = {
         "clientNbr": id,
@@ -46,7 +56,7 @@ def edit_client(id, name, last_name, address, telephones):
         "address": address,
         "active": active,
         "phones": telephones,
-        "billNbrs": bills
+        "billNbrs": client_bills
     }
     response = requests.patch(f"http://127.0.0.1:8000/clients/{id}", json=body).json()
 
@@ -76,7 +86,6 @@ def create_product(id, name, brand, description, price, stock):
         return True # Created
 
 def edit_product(id, name, brand, description, price, stock):
-    bills = find_product_by_id(id)['billNbrs']
     body = {
         "codProduct": id,
         "brand": brand,
@@ -84,7 +93,6 @@ def edit_product(id, name, brand, description, price, stock):
         "description": description,
         "price": price,
         "stock": stock,
-        "billNbrs": bills
     }
     response = requests.patch(f"http://127.0.0.1:8000/products/{id}", json=body).json()
 
