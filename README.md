@@ -1,4 +1,4 @@
-# 🛒 Trabajo Practico Obligatorio - Bases de Datos II
+# 💾 Trabajo Practico Obligatorio - Bases de Datos II
 
 ## Consigna
 
