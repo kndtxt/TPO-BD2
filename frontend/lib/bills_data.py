@@ -47,7 +47,7 @@ def get_name_last_name_money_spent():
 
 def get_bill_data_ordered_by_dates():
     delete = requests.delete("http://127.0.0.1:8000/bills/date-view")
-    response = requests.post("http://127.0.0.1:8000/bills/date-view").json()
+    response = requests.post("http://127.0.0.1:8000/bills/date-view").json()['data']
     return response
 
 # TODO: check endpoint
