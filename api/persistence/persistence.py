@@ -116,6 +116,7 @@ def populateDb():
 
             for row in billDetailReader:
                 billNbr = row[0]
+                codProduct = row[1]
                 bills[billNbr]['details'].append({
                     'codProduct': int(codProduct),
                     'itemNbr': int(row[2]),
@@ -131,8 +132,3 @@ def populateDb():
             productQuery = {'codProduct': int(detail['codProduct'])}
             PRODUCTS.update_one(productQuery, operation)    #add reference to bill where product was billed
         BILLS.insert_one(bills[billIndex])
-
-            
-
-
-
