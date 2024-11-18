@@ -124,7 +124,8 @@ def getBillsByBrand(brand: str):
         products = getProductForBrands(brand)
         product_ids = [p['codProduct'] for p in products]
         query = {'details.codProduct': {'$in': product_ids}}
-        bills = clean_data(BILLS.find(query))
+        projection = {'_id': 0}
+        bills = clean_data(BILLS.find(query, projection))
         if len(bills) > 0:
             c.cache_set(redis_key, bills)
         return bills
