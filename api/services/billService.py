@@ -182,7 +182,7 @@ def getBills(name: str, surname: str):
 
         clientNbrs = [c['clientNbr'] for c in maybe_clients]
         query = {'clientNbr': {'$in': clientNbrs}}
-        projection = {'_id': 0, }
+        projection = {'_id': 0}
         bill_list = clean_data(BILLS.find(query, projection))
         if bill_list:
             c.cache_set(redis_key, bill_list)
