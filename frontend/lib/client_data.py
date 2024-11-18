@@ -1,5 +1,5 @@
 import requests
-from .crud import find_client_by_id
+from crud import find_client_by_id
 
 def get_all_clients_data():
     clients_data = requests.get("http://127.0.0.1:8000/clients/").json()
@@ -39,15 +39,8 @@ def get_clients_without_bills():
 
 # Returns clients <> number of bills
 def get_clients_number_of_bills():
-    bills = requests.get("http://127.0.0.1:8000/bills/").json()['data']
-    client_data = {}
-
+    bills = requests.get("http://127.0.0.1:8000/clients/?bills=amount").json()['data']
+    ans = {}
     for bill in bills:
-        client = find_client_by_id(bill['clientNbr'])
-        full_name = f"{client['name']} {client['lastName']}"
-        if full_name in client_data:
-            client_data[full_name] += 1
-        else:
-            client_data[full_name] = 1
-
-    return client_data
+        ans[f"{bill['name']} {bill['lastName']}"] = bill['billAmount']
+    return ans
