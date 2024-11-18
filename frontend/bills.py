@@ -44,8 +44,16 @@ elif option == "Bills with products from a particular brand":
         if data == []:
             st.write("No bills found")
         else:
-            for product in data:
-                st.write(f"**Product Code**: {product['codProduct']} **Name**: {product['name']} **Brand**: {product['brand']} **Description**: {product['description']}")
+            for bill in data:
+                st.write(f"**Id**: {bill['billNbr']}")
+                st.write(f"**Date**: {bill['date']}")
+                st.write(f"**Total without taxes**: {bill['total']}")
+                st.write(f"**Tax**: {bill['tax']}")
+                st.write(f"**Total with taxes**: {bill['taxxedTotal']}")
+                st.write(f"**Client ID**: {bill['clientNbr']}")
+                st.write("**Bill details:**")
+                for product in bill['details']:
+                    st.write(f"- **Product Code**: {product['codProduct']} **Item number**: {product['itemNbr']} **Amount**: {product['amount']}")
 
 elif option == "Name and Last Name <> what was spent":
     data = get_name_last_name_money_spent()
