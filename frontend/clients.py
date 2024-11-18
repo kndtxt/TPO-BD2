@@ -20,6 +20,7 @@ if option == "Show Client Data":
     for client in client_data:
         st.write(f"**ID: {client['clientNbr']} -- Name: {client['name']} {client['lastName']}**") 
         st.write(f"Address: {client['address']}")
+        st.write(f"Active: {client['active']}")
         st.write(f"Telephones:")
         for phone in client['phones']:
             st.write(f"{phone['areaCode']} - {phone['phoneNbr']} - {phone['phoneType']}")
